@@ -1,0 +1,17 @@
+[Unit]
+Description=Uploader lane: %i
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+User=__USER__
+EnvironmentFile=/etc/uploader.env
+WorkingDirectory=/opt/uploader
+# __LAUNCHER__ is empty for headless, or "/usr/bin/xvfb-run -a" when HEADLESS=0
+ExecStart=__LAUNCHER__ /opt/uploader/venv/bin/uvicorn lanes.%i.app:app --host 0.0.0.0 --port 8100 --workers 1
+Restart=always
+RestartSec=5
+MemoryMax=3G
+
+[Install]
+WantedBy=multi-user.target

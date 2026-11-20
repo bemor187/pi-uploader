@@ -1,0 +1,15 @@
+[Unit]
+Description=Uploader brain (API + queue + dispatcher)
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+User=__USER__
+EnvironmentFile=/etc/uploader.env
+WorkingDirectory=/opt/uploader
+ExecStart=/opt/uploader/venv/bin/uvicorn brain.app:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

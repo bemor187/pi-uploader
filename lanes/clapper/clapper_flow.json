@@ -1,0 +1,14 @@
+{
+  "_comment": "Steps run after the share intent opens Clapper with the video. Calibrate with: python -m lanes.clapper.dump_ui. Match keys: text, desc, id, class (exact) or text_re, desc_re, id_re, any_re (regex). Actions: tap, wait, type_caption, key, sleep. 'optional': true skips a step when nothing matches.",
+  "steps": [
+    {"label": "app loads", "action": "sleep", "seconds": 6},
+    {"label": "dismiss permission prompt", "action": "tap", "match": {"text_re": "^(While using the app|Allow|Only this time)$"}, "optional": true, "timeout": 4},
+    {"label": "editor next", "action": "tap", "match": {"any_re": "^next$"}, "timeout": 90, "optional": true},
+    {"label": "second next", "action": "tap", "match": {"any_re": "^next$"}, "timeout": 15, "optional": true},
+    {"label": "caption field", "action": "tap", "match": {"class": "android.widget.EditText"}, "timeout": 60},
+    {"label": "type caption", "action": "type_caption"},
+    {"label": "hide keyboard", "action": "key", "key": "KEYCODE_BACK"},
+    {"label": "post button", "action": "tap", "match": {"any_re": "^(post|publish|share)$", "enabled": true}, "timeout": 30},
+    {"label": "confirmation", "action": "wait", "match": {"any_re": "(posted|uploading|upload complete|your video)"}, "timeout": 300, "optional": true}
+  ]
+}
