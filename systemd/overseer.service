@@ -1,0 +1,17 @@
+[Unit]
+Description=Overseer (AI tasker + cluster monitor)
+After=network-online.target tailscaled.service ollama.service
+Wants=network-online.target
+
+[Service]
+User=__USER__
+EnvironmentFile=/etc/uploader.env
+WorkingDirectory=/opt/uploader
+# 0.0.0.0 is fine: ufw only admits non-SSH traffic on tailscale0
+ExecStart=/opt/uploader/venv/bin/uvicorn overseer.app:app --host 0.0.0.0 --port 8200 --workers 1
+Restart=always
+RestartSec=5
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target

@@ -11,6 +11,7 @@ day-to-day running are all done from a phone.
 | tiktok | Pi 4 4GB | Playwright Chromium → TikTok Studio web | `uploader-lane@tiktok` | 8100 |
 | insta | Pi 4 4GB | Playwright Chromium → instagram.com Reels | `uploader-lane@insta` | 8100 |
 | clapper | Pi 4 4GB | ADB → Clapper app on Pixel 3a | `uploader-lane@clapper` | 8100 |
+| overseer | Pi 4 4GB | AI tasker (Ollama router) + cluster monitor/alerts | `overseer`, `ollama` | 8200 (11434 localhost only) |
 
 Everything except SSH is firewalled (ufw) to the `tailscale0` interface.
 The job queue uses SQLite rather than Redis: one less daemon, and it survives reboots.
@@ -109,6 +110,29 @@ The lanes, noVNC and SSH stay tailnet-only.
 - Lane reachable but the result is unclear (timeout, brain restarted mid-job): marked `failed`
   with a note to check the platform. It never auto-reposts. Use `/retry` once you've checked.
 - Failed jobs keep their media on brain, so `/retry` works without re-uploading.
+
+## 4b. Overseer (AI tasker + monitor)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bemor187/pi-uploader/main/scripts/bootstrap.sh | sudo API_TOKEN=<brain's API_TOKEN> bash -s overseer
+```
+
+This installs Ollama, which listens on `127.0.0.1:11434` only and keeps one model loaded and one request at a time, with a 30m keep-alive.
+It pulls `qwen2.5:1.5b`, starts `overseer` on :8200 and prints a **TASK_TOKEN**. Then edit `/etc/uploader.env`:
+
+```
+AGENTS=msi=ollama:http://msi:11434|qwen3:14b,macbook=ollama:http://macbook:11434,local=ollama:http://127.0.0.1:11434|qwen2.5:1.5b
+ALERT_URL=https://ntfy.sh/<your-long-random-topic>
+BRAIN_URL=http://brain
+```
+
+and run `sudo systemctl restart overseer`. MSI and MacBook need `OLLAMA_HOST=0.0.0.0` and must be on the tailnet.
+
+- `POST http://overseer:8200/task` with `Authorization: Bearer $TASK_TOKEN` and `{"prompt": "..."}`. Tasks go to MSI first, then the MacBook, then the local model.
+  Add `"agent": "msi"` (and optionally `"model"`) to pin a task to one agent.
+- `http://overseer:8200/` shows the status page. `/health` returns JSON. `/digest?token=$TASK_TOKEN` gives a plain-English summary from the local model.
+- Every 60s it checks each Ollama agent, brain and the three lanes. It sends an ntfy alert when one goes down (2 failed checks in a row) or comes back up, and for each newly failed upload.
+- Auto-retry happens **once per job**, and only when brain says `lane unreachable:`. That means the lane never got the video, so it can't have been posted. Any other failure is alert-only.
 
 ## 5. Hardening (Phase 4)
 

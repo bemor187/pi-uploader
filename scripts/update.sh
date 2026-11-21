@@ -8,7 +8,8 @@ SRC="$(cd "$(dirname "$0")/.." && pwd)"
 sudo -u "$U" git -C "$SRC" pull --ff-only
 rsync -a --exclude venv --exclude lanes/clapper/clapper_flow.json "$SRC/" /opt/uploader/
 chown -R "$U:$U" /opt/uploader
-for u in uploader-brain uploader-lane@tiktok uploader-lane@insta uploader-lane@clapper; do
+[[ -f /opt/uploader/overseer/requirements.txt ]] && systemctl is-enabled overseer >/dev/null 2>&1 && \n  /opt/uploader/venv/bin/pip install -q -r /opt/uploader/overseer/requirements.txt
+for u in uploader-brain uploader-lane@tiktok uploader-lane@insta uploader-lane@clapper overseer; do
   systemctl is-enabled "$u" >/dev/null 2>&1 && systemctl restart "$u" && echo "restarted $u"
 done
 echo "updated to $(git -C "$SRC" log --oneline -1)"

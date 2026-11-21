@@ -2,14 +2,15 @@
 # One-shot setup for a Pi in the uploader cluster.
 #   scp -r pi-uploader <user>@<pi>.local:~
 #   ssh <user>@<pi>.local
-#   cd pi-uploader && sudo ./scripts/setup.sh brain|tiktok|insta|clapper
+#   cd pi-uploader && sudo ./scripts/setup.sh brain|tiktok|insta|clapper|overseer
 #
 # Tokens: on brain, leave them unset and the script generates both and prints them.
 # On the lanes, pass the same LANE_TOKEN:  sudo LANE_TOKEN=xxxx ./scripts/setup.sh tiktok
+# On overseer, pass brain's API_TOKEN:      sudo API_TOKEN=xxxx ./scripts/setup.sh overseer
 set -euo pipefail
 
 ROLE="${1:-}"
-case "$ROLE" in brain|tiktok|insta|clapper) ;; *) echo "usage: sudo $0 brain|tiktok|insta|clapper"; exit 1;; esac
+case "$ROLE" in brain|tiktok|insta|clapper|overseer) ;; *) echo "usage: sudo $0 brain|tiktok|insta|clapper|overseer"; exit 1;; esac
 [[ $EUID -eq 0 ]] || { echo "run with sudo"; exit 1; }
 RUN_USER="${SUDO_USER:-$(logname)}"
 RUN_HOME="$(getent passwd "$RUN_USER" | cut -d: -f6)"
@@ -52,6 +53,7 @@ else
   echo "$ENVF exists; leaving it alone"
 fi
 set_env() { grep -q "^$1=" "$ENVF" && sed -i "s|^$1=.*|$1=$2|" "$ENVF" || echo "$1=$2" >> "$ENVF"; }
+env_default() { grep -q "^$1=" "$ENVF" || echo "$1=$2" >> "$ENVF"; }   # add only if missing
 
 add_swap() {
   if command -v dphys-swapfile >/dev/null; then
@@ -110,9 +112,39 @@ case "$ROLE" in
     usermod -aG plugdev "$RUN_USER"
     sudo -u "$RUN_USER" mkdir -p "$RUN_HOME/uploader-work"
     ;;
+  overseer)
+    step "overseer: API + monitor"
+    "$APP/venv/bin/pip" install -q -r "$APP/overseer/requirements.txt"
+    mkdir -p /var/lib/overseer && chown "$RUN_USER:$RUN_USER" /var/lib/overseer
+    if [[ -n "${API_TOKEN:-}" ]]; then set_env API_TOKEN "$API_TOKEN"; fi
+    grep -q '^API_TOKEN=change-me$' "$ENVF" && echo "WARNING: API_TOKEN not set; re-run with API_TOKEN=<brain's> to enable job alerts/retry"
+    grep -Eq '^TASK_TOKEN=.{16,}' "$ENVF" && ! grep -q '^TASK_TOKEN=change-me' "$ENVF"       || set_env TASK_TOKEN "$(openssl rand -hex 24)"
+    env_default AGENTS "msi=ollama:http://msi:11434|qwen3:14b,macbook=ollama:http://macbook:11434,local=ollama:http://127.0.0.1:11434|qwen2.5:1.5b"
+    env_default BRAIN_URL http://brain
+    env_default ALERT_URL ""
+    env_default OLLAMA_MODEL qwen2.5:1.5b
+
+    step "overseer: Ollama (localhost only, one model, one request at a time)"
+    command -v ollama >/dev/null || curl -fsSL https://ollama.com/install.sh | sh
+    mkdir -p /etc/systemd/system/ollama.service.d
+    cat > /etc/systemd/system/ollama.service.d/override.conf <<'OLL'
+[Service]
+Environment="OLLAMA_HOST=127.0.0.1:11434"
+Environment="OLLAMA_MAX_LOADED_MODELS=1"
+Environment="OLLAMA_NUM_PARALLEL=1"
+Environment="OLLAMA_KEEP_ALIVE=30m"
+OLL
+    systemctl daemon-reload && systemctl enable ollama && systemctl restart ollama
+    for _ in $(seq 30); do curl -fs http://127.0.0.1:11434/api/tags >/dev/null && break; sleep 1; done
+    MODEL="$(grep -m1 '^OLLAMA_MODEL=' "$ENVF" | cut -d= -f2)"
+    ollama pull "${MODEL:-qwen2.5:1.5b}"
+    add_swap
+    UNIT=overseer.service
+    sed "s/__USER__/$RUN_USER/" "$APP/systemd/overseer.service" > /etc/systemd/system/$UNIT
+    ;;
 esac
 
-if [[ $ROLE != brain ]]; then
+if [[ $ROLE == tiktok || $ROLE == insta || $ROLE == clapper ]]; then
   UNIT="uploader-lane@$ROLE.service"
   sed -e "s/__USER__/$RUN_USER/" -e "s|__LAUNCHER__ |${LAUNCHER}${LAUNCHER:+ }|" \
       "$APP/systemd/uploader-lane@.service" > /etc/systemd/system/uploader-lane@.service
@@ -130,3 +162,11 @@ sleep 3
 systemctl --no-pager --lines=5 status "$UNIT" || true
 echo
 echo "Done: $ROLE is set up. Tailscale IP: $(tailscale ip -4 2>/dev/null | head -1)"
+if [[ $ROLE == overseer ]]; then
+  echo
+  systemctl --no-pager is-active ollama overseer || true
+  curl -fsS --retry 5 --retry-delay 2 --retry-connrefused http://127.0.0.1:8200/health >/dev/null && echo "overseer /health: OK" || echo "overseer /health: NOT responding (journalctl -u overseer)"
+  echo "TASK_TOKEN=$(grep -m1 '^TASK_TOKEN=' "$ENVF" | cut -d= -f2)   <- for POST http://overseer:8200/task"
+  echo "Edit $ENVF (ALERT_URL=https://ntfy.sh/<topic>, AGENTS, BRAIN_URL), then: sudo systemctl restart overseer"
+  echo "Status page: http://overseer:8200/"
+fi
