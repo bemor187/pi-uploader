@@ -23,7 +23,7 @@ from lanes.common.lane import DEBUG_DIR, LaneError, create_app
 
 ADB = os.environ.get("ADB", "adb")
 SERIAL = os.environ.get("ADB_SERIAL", "")
-PACKAGE = os.environ.get("CLAPPER_PACKAGE", "com.clapperapp")
+PACKAGE = os.environ.get("CLAPPER_PACKAGE", "com.newsclapper.video")
 FLOW_FILE = Path(os.environ.get("CLAPPER_FLOW", str(Path(__file__).with_name("clapper_flow.json"))))
 REMOTE_DIR = "/sdcard/DCIM/Uploader"
 
