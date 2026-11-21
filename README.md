@@ -68,7 +68,10 @@ The lane then runs a real browser inside a virtual display (xvfb).
 3. Remove the screen lock PIN, or set Screen lock to None, so the lane can wake and unlock the phone.
 4. `curl -H "Authorization: Bearer $LANE_TOKEN" http://clapper:8100/check` shows whether Clapper is installed.
    It also lists candidate package names. Put the right one in `CLAPPER_PACKAGE` and run `sudo systemctl restart uploader-lane@clapper`.
-5. **Calibrate the flow.** Clapper's screens aren't documented, so `lanes/clapper/clapper_flow.json` is a first guess.
+5. **Map Clapper's screens automatically** (never posts):
+   `cd /opt/uploader && ./venv/bin/python -m lanes.clapper.explore --apply`
+   It records a test clip on the phone, walks Clapper's screens up to the Post button, and saves the steps.
+   If it gets stuck, it writes a report to `~/uploader-work/clapper-explore.txt`. To calibrate by hand instead: Clapper's screens aren't documented, so `lanes/clapper/clapper_flow.json` is a first guess.
    Step through one post by hand, running this on each screen:
    `cd /opt/uploader && ./venv/bin/python -m lanes.clapper.dump_ui`
    Then edit the matches in `/opt/uploader/lanes/clapper/clapper_flow.json` to fit.
@@ -122,7 +125,7 @@ journalctl -u uploader-lane@insta -f             # live logs
 ls ~/uploader-work/debug/                         # failure screenshots (browser + phone)
 sudo nano /etc/uploader.env && sudo systemctl restart <unit>
 ```
-Updating code: re-run the bootstrap line. It pulls from GitHub and keeps `/etc/uploader.env`.
+Updating code: `git -C ~/pi-uploader pull && sudo ~/pi-uploader/scripts/update.sh` pulls the code and restarts the services. It doesn't upgrade system packages, and it keeps `/etc/uploader.env` and the Pi's Clapper steps. Re-running the bootstrap line also works, and it does a full upgrade.
 
 ## Known limits
 - TikTok and Instagram change their web UIs. When a step breaks, the failure screenshot shows which one.
