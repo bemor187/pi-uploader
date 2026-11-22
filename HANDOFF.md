@@ -15,20 +15,40 @@ Any agent (Claude Code, Grok, Garlic, overseer) picking this up: **read this fil
 
 Stop and hand to the user only for the steps marked **HUMAN**. Give them the exact URL or instruction, wait, then re-run that goal. Ask before anything destructive: reflashing, deleting data, `ufw` changes or overwriting `/etc/uploader.env`.
 
+## State at handoff (2026-11-22 18:15)
+
+Working end to end: brain, tiktok (posts as the account default, caption + visibility verified), clapper (Pixel; about 7.5 min per post), web, overseer (ntfy alerts live, MSI Ollama agent, nightly backups). **Left: Instagram, then SSH hardening.**
+
+## Next steps (do in order)
+
+1. `git pull && ./scripts/goals.sh`. Expect G3/G6/G9 to fail only on **insta**, plus G10.
+2. **HUMAN:** the insta Pi has been offline since 15:41. Ask the user to power-cycle it (check the power and network cables near where the Pixel used to be). Poll `./scripts/goals.sh G1` until insta answers, then `./scripts/goals.sh G2` and `./scripts/goals.sh G3`.
+3. Instagram login, done from the PC because Meta rejects logins made on the Pi:
+   - on the MSI: `pip install playwright` then `python -m playwright install chromium` (one-time)
+   - `python scripts/export-login.py insta`. **HUMAN:** the user logs in in the window it opens and approves any "was this you?" on their phone, then presses Enter. The script copies the session to `insta:~/uploader-state/insta-state.json` and deletes the local copy.
+   - verify with `./scripts/goals.sh G6`. If it's still `logged_in: false` or checkpointed: open `http://insta:8100/login?token=<LANE_TOKEN>` for the user to clear the challenge, then `/login/done`.
+4. G9 insta: **ask the user's OK first** (an Instagram Reel can't be posted privately; the user deletes it after). Then:
+   `curl -X POST http://brain/upload -H "Authorization: Bearer $API_TOKEN" -F file=@test.mp4 -F "caption=pipeline test" -F platform=insta`
+   and poll `/status/<job_id>` until done. Debug failures from `~/uploader-work/debug/` on insta.
+5. Clapper SSH: ask the user to OK either `sudo tailscale set --ssh=false` on clapper or a tailnet ACL with `accept` instead of `check` for the Pis. Apply it and confirm `ssh bemor@clapper` works without re-auth.
+6. G10: on each Pi, `sudo ~/pi-uploader/scripts/harden-ssh.sh --tailscale`. Confirm a fresh `ssh bemor@<host>` works **before** moving to the next Pi, and do clapper last. Then `./scripts/goals.sh` should show ALL GOALS PASS.
+7. Optional: shorten Clapper's optional confirmation wait (it runs out its full 300 s on every post) in `lanes/clapper/` config, then do one more clapper test post with the user's OK.
+8. Don't build without the user's answer (see Open decisions): a Facebook lane, or Postiz.
+
 ## Goals (in order)
 
 | ✓ | Goal | Verify | Fix |
 |---|---|---|---|
 | [x] | G1 All 6 Pis on Tailscale + SSH | `goals.sh G1` | Done 2026-11-22 (user) |
 | [x] | G2 Each role's services installed + active | `goals.sh G2` | Re-run bootstrap on that Pi (README §1, §4b). Lanes need brain's `LANE_TOKEN`, overseer needs brain's `API_TOKEN` (`sudo grep TOKEN /etc/uploader.env` on brain) |
-| [ ] | G3 brain reaches all lanes | `goals.sh G3` | `journalctl -u uploader-lane@<lane>`; check `LANE_*` URLs in brain's env |
+| [x] | G3 brain reaches all lanes (fails while insta is offline) | `goals.sh G3` | `journalctl -u uploader-lane@<lane>`; check `LANE_*` URLs in brain's env |
 | [x] | G4 overseer green + ntfy alerts | `goals.sh G4` | Set `ALERT_URL=https://ntfy.sh/<random topic>` in overseer's `/etc/uploader.env`, `sudo systemctl restart overseer`, tell the user the topic so they can subscribe |
-| [ ] | G5 overseer can use the MSI's Ollama | `goals.sh G5` | On the MSI: `setx OLLAMA_HOST 0.0.0.0`, restart Ollama, allow port 11434 on Tailscale in Windows Firewall |
-| [ ] | G6 TikTok + Instagram logged in — **HUMAN** | `goals.sh G6` | Meta rejects logins made on the Pi ("wrong password"), so log in from the PC: on the MSI run `python scripts/export-login.py insta` (same for `tiktok` if needed). The user logs in in the window it opens; the script copies the session to the Pi. Fallback: `http://<lane>:8100/login?token=<LANE_TOKEN>` |
-| [ ] | G7 Pixel on clapper — **HUMAN** | `goals.sh G7` | User plugs in the Pixel 3a and accepts USB debugging; then calibrate (README §3) |
+| [x] | G5 overseer can use the MSI's Ollama | `goals.sh G5` | On the MSI: `setx OLLAMA_HOST 0.0.0.0`, restart Ollama, allow port 11434 on Tailscale in Windows Firewall |
+| [ ] | G6 TikTok ✓ + Instagram logged in — **HUMAN** | `goals.sh G6` | Meta rejects logins made on the Pi ("wrong password"), so log in from the PC: on the MSI run `python scripts/export-login.py insta` (same for `tiktok` if needed). The user logs in in the window it opens; the script copies the session to the Pi. Fallback: `http://<lane>:8100/login?token=<LANE_TOKEN>` |
+| [x] | G7 Pixel on clapper — **HUMAN** | `goals.sh G7` | User plugs in the Pixel 3a and accepts USB debugging; then calibrate (README §3) |
 | [x] | G8 PR #2 merged + deployed | `goals.sh G8` | Merge PR #2 (`check-update-recover`), then on each Pi: `~/pi-uploader/scripts/update.sh` |
-| [ ] | G9 One successful upload per lane | `goals.sh G9` | `POST http://brain/upload` a short test video per platform (README §4); watch `/jobs` |
-| [ ] | G10 Password SSH off — do last | `goals.sh G10` | `sudo ~/pi-uploader/scripts/harden-ssh.sh --tailscale` on each Pi, only after G1–G9 pass |
+| [ ] | G9 One successful upload per lane (tiktok ✓ clapper ✓, insta left) | `goals.sh G9` | `POST http://brain/upload` a short test video per platform (README §4); watch `/jobs` |
+| [ ] | G10 Password SSH off — do last | `goals.sh G10` | `sudo ~/pi-uploader/scripts/harden-ssh.sh --tailscale` on each Pi, only after G1–G9 pass **and** the clapper SSH blocker is settled (`--tailscale` closes LAN port 22, which is clapper's current workaround) |
 
 ## Stack facts
 
@@ -40,24 +60,18 @@ Stop and hand to the user only for the steps marked **HUMAN**. Give them the exa
 
 ## Blockers
 
-- ~~2026-11-22 no passwordless sudo~~ Resolved the same day: the user added `/etc/sudoers.d/010-bemor-nopasswd` on all 6 Pis.
-- 2026-11-22 clapper runs Tailscale SSH in **check** mode, so every session waits for a browser re-auth. Workaround: the MSI's `~/.ssh/config` reaches clapper over `clapper.local`. Permanent fix once sudo works: `sudo tailscale set --ssh=false` on clapper (or set the tailnet SSH ACL to `accept`). Needs the user's OK because it weakens an auth check. Note: `setup.sh` runs `tailscale set --ssh` on every Pi, so re-running bootstrap turns Tailscale SSH back on.
+- **HUMAN — insta Pi offline since 15:41.** No ping, no SSH, Tailscale offline (overseer alerted). Probably a cable knocked loose when the Pixel was moved. Next step 2.
+- **HUMAN — Instagram login.** On the Pi, Instagram sends the login to `auth_platform/challengepicker`, and Meta rejects Facebook logins made on the Pi ("wrong password", no recovery) even though the same login works on phone and web. Use `scripts/export-login.py` from the PC (next step 3).
+- **clapper Tailscale SSH is in check mode**, so every session needs a browser re-auth. Workaround: the MSI's `~/.ssh/config` reaches clapper over `clapper.local`. The fix needs the user's OK (next step 5). `setup.sh` runs `tailscale set --ssh`, so re-running bootstrap on clapper turns it back on.
 
-- 2026-11-22 **HUMAN — Instagram checkpoint.** The login worked, but Instagram sends the Pi to `auth_platform/challengepicker` ("confirm it's you"). The user skipped it for now. To resume: open `http://insta:8100/login?token=…`, finish the challenge until the home feed shows, then open `/login/done`. This blocks G6 and the insta part of G9.
+## Open decisions (ask the user; don't build yet)
 
-- ~~TikTok caption dropped~~ Fixed in b080905 (caption + visibility are confirmed before Post). Verified with job 927f051f95f8: caption kept, Only me.
-
-- 2026-11-22 **HUMAN — insta Pi offline since 15:41** (overseer sent the ntfy alert). No ping, no SSH, Tailscale offline. Its power or network cable was probably knocked loose when the Pixel was moved off it. Power-cycle it, then do the Instagram login (G6) and an insta test post (G9).
-
-- 2026-11-22 Meta also rejects Facebook logins made on the Pi ("wrong password", no recovery), but the same login works on phone and web. **Preferred route for Instagram now:** once insta is back up, on the MSI run `python scripts/export-login.py insta` (one-time setup: `pip install playwright` and `python -m playwright install chromium`). The user logs in on the PC and the script copies the session to the Pi, which avoids the Pi-side challenge.
-
-## Open decisions
-
-- **Postiz (revisited 2026-11-22).** The user's Instagram is a Creator account, so Postiz's "Instagram Standalone" provider (Instagram login, `INSTAGRAM_APP_ID`/`SECRET`, no Facebook Page needed) is a fallback if the insta lane keeps getting checkpointed. The user's Facebook is a **personal profile**, which no Meta API (Postiz included) can post to, so Facebook would need a new Playwright `facebook` lane using the same PC-login route. Postiz needs Postgres + Redis + Temporal, which is tight on the spare Pi 4 (4 GB). The user has a thumbdrive in the MSI meant for Postiz; its role (spare Pi boot drive?) is unconfirmed. Don't build either until the user picks.
+- **Facebook:** the user's account is a **personal profile**. No Meta API (Postiz included) can post to it, so the only route is a new Playwright `facebook` lane using the PC-login route (`export-login.py` would need a `facebook` entry, plus a new spare Pi or a shared lane Pi).
+- **Postiz:** the user's Instagram is a **Creator** account, so Postiz's "Instagram Standalone" provider (Instagram login, `INSTAGRAM_APP_ID`/`SECRET`, no Facebook Page) is a fallback if the insta lane keeps getting checkpointed. It needs Postgres + Redis + Temporal, which is tight on the spare Pi 4 (4 GB). The user has a thumbdrive in the MSI meant for Postiz; its role (spare Pi boot drive?) is unconfirmed.
 
 ## Log
 
-- 2026-11-22: Added `scripts/export-login.py` (log in on the PC, then copy the session to the lane Pi).
+- 2026-11-22 18:15: Handoff rewritten for Claude Code: state, numbered next steps, cleaned blockers. Added `scripts/export-login.py`.
 - 2026-11-22: All Pis joined Tailscale and SSH works (G1). Earlier the same day, overseer wasn't bootstrapped and the lanes showed offline, so start at G2.
 - 2026-11-22: First loop run. G3, G5 and G7 pass. G1 broke because the MSI `~/.ssh/config` mapped hosts to `%h.local` and `tiktok.local` stopped resolving. The config now uses Tailscale names (backup at `~/.ssh/config.bak-20261122`) and G1 passes again. tiktok's SSH host key matches the old `192.168.1.206` entry, which is now web's LAN IP; they may be cloned images with the same host key. Stopped at G2: blocked on sudo (see Blockers).
 - 2026-11-22: Loop run 2. **G2:** overseer bootstrap had been dying silently after the Tailscale step: `tailscale status | head -n 5` hit SIGPIPE under pipefail once the tailnet had more than 5 peers. Fixed in 52347ce; overseer and ollama are now active. **G8:** `update.sh` deployed on all 6 Pis. clapper needed a `git pull` first, and 4 Pis needed a second run, because the first run executes the pre-pull copy of update.sh. Removed the `macbook` agent from overseer's AGENTS (that machine isn't on the tailnet). overseer `/health` reports nothing down. Passing now: G1 G2 G3 G5 G7 G8. Next: G4 (OK on ntfy), G6 (HUMAN logins), G9 (OK to make real test posts), G10.
