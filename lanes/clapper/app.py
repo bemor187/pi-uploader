@@ -196,6 +196,12 @@ async def run_flow(caption: str):
         if action == "type_caption":
             await type_text(caption)
             continue
+        if action == "hide_keyboard":
+            # BACK only while the keyboard is up; a blind BACK would leave the composer.
+            if "mInputShown=true" in await shell("dumpsys input_method", check=False):
+                await shell("input keyevent KEYCODE_BACK")
+                await asyncio.sleep(1)
+            continue
         node = await find(step["match"], timeout)
         if node is None:
             if optional:

@@ -1,14 +1,21 @@
 {
-  "_comment": "Steps run after the share intent opens Clapper with the video. Calibrate with: python -m lanes.clapper.dump_ui. Match keys: text, desc, id, class (exact) or text_re, desc_re, id_re, any_re (regex). Actions: tap, wait, type_caption, key, sleep. 'optional': true skips a step when nothing matches.",
+  "_comment": "Calibrated 2026-11-22 on Pixel 3a / Android 12 by hand. Clapper has no video share handler, so open_share falls back to launching the app and this flow goes + -> Video -> Upload -> newest gallery item. Match keys: text, desc, id, class (exact) or text_re, desc_re, id_re, any_re (regex); 'index' picks the Nth hit. Actions: tap, wait, type_caption, hide_keyboard, key, sleep. 'optional': true skips a step when nothing matches. Re-map with: python -m lanes.clapper.dump_ui",
   "steps": [
     {"label": "app loads", "action": "sleep", "seconds": 6},
     {"label": "dismiss permission prompt", "action": "tap", "match": {"text_re": "^(While using the app|Allow|Only this time)$"}, "optional": true, "timeout": 4},
-    {"label": "editor next", "action": "tap", "match": {"any_re": "^next$"}, "timeout": 90, "optional": true},
-    {"label": "second next", "action": "tap", "match": {"any_re": "^next$"}, "timeout": 15, "optional": true},
-    {"label": "caption field", "action": "tap", "match": {"class": "android.widget.EditText"}, "timeout": 60},
+    {"label": "+ (record) tab", "action": "tap", "match": {"id_re": ":id/navRecord$"}, "timeout": 30},
+    {"label": "Video", "action": "tap", "match": {"id_re": ":id/launcherVideo$"}, "timeout": 15},
+    {"label": "camera/mic permission", "action": "tap", "match": {"text_re": "^(While using the app|Allow|Only this time)$"}, "optional": true, "timeout": 4},
+    {"label": "camera/mic permission 2", "action": "tap", "match": {"text_re": "^(While using the app|Allow|Only this time)$"}, "optional": true, "timeout": 3},
+    {"label": "Upload (gallery)", "action": "tap", "match": {"id_re": ":id/ivUpload$"}, "timeout": 20},
+    {"label": "media permission", "action": "tap", "match": {"text_re": "^(Allow|Allow all)$"}, "optional": true, "timeout": 4},
+    {"label": "newest video (the one just pushed)", "action": "tap", "match": {"id_re": ":id/btnCheck$", "index": 0}, "timeout": 20},
+    {"label": "picker Next", "action": "tap", "match": {"id_re": ":id/ps_complete_select$"}, "timeout": 10, "after": 3},
+    {"label": "editor Next", "action": "tap", "match": {"id_re": ":id/editorNext$"}, "timeout": 90, "after": 3},
+    {"label": "caption field", "action": "tap", "match": {"id_re": ":id/edtDesc$"}, "timeout": 60},
     {"label": "type caption", "action": "type_caption"},
-    {"label": "hide keyboard", "action": "key", "key": "KEYCODE_BACK"},
-    {"label": "post button", "action": "tap", "match": {"any_re": "^(post|publish|share)$", "enabled": true}, "timeout": 30},
-    {"label": "confirmation", "action": "wait", "match": {"any_re": "(posted|uploading|upload complete|your video)"}, "timeout": 300, "optional": true}
+    {"label": "hide keyboard", "action": "hide_keyboard"},
+    {"label": "post button", "action": "tap", "match": {"id_re": ":id/btnPost$", "enabled": true}, "timeout": 30},
+    {"label": "confirmation", "action": "wait", "match": {"any_re": "(posted|uploading|upload complete|your video|publish)"}, "timeout": 300, "optional": true}
   ]
 }
