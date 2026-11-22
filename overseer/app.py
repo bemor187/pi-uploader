@@ -63,6 +63,9 @@ SITES = {
     if n.strip() and u.strip()
 }
 RETRYABLE_PREFIX = "lane unreachable:"
+# backups other Pis send here (scripts/backup.sh + backup-receiver.sh)
+BACKUP_ROOT = Path(os.environ.get("BACKUP_ROOT", "/var/backups/pi-stack"))
+BACKUP_MAX_AGE = float(os.environ.get("BACKUP_MAX_AGE_H", "36")) * 3600
 
 
 def parse_agents(spec: str) -> list:
@@ -221,6 +224,32 @@ async def check_failed_jobs(c: httpx.AsyncClient):
                         (str(time.time()),))
 
 
+def latest_backups() -> dict:
+    """host -> {"file", "mtime", "bytes"} for the newest backup received from each Pi."""
+    out = {}
+    try:
+        hosts = [d for d in BACKUP_ROOT.iterdir() if d.is_dir() and d.name != "incoming"]
+    except OSError:
+        return out
+    for d in hosts:
+        try:
+            files = sorted(d.glob("*.tgz"), key=lambda f: f.stat().st_mtime)
+        except OSError:
+            continue
+        if files:
+            st = files[-1].stat()
+            out[d.name] = {"file": files[-1].name, "mtime": st.st_mtime, "bytes": st.st_size}
+    return out
+
+
+async def check_backups():
+    for host, b in (await asyncio.to_thread(latest_backups)).items():
+        age = time.time() - b["mtime"]
+        await record(f"backup:{host}", age < BACKUP_MAX_AGE,
+                     f"{b['file']} ({age / 3600:.0f}h old)" if age >= BACKUP_MAX_AGE
+                     else f"ok ({age / 3600:.0f}h old)")
+
+
 async def monitor_once():
     async with httpx.AsyncClient(timeout=httpx.Timeout(10, connect=5)) as c:
         async def agent(a):
@@ -255,6 +284,7 @@ async def monitor_once():
                              *(lane(n, u) for n, u in LANES.items()),
                              *(site(n, u) for n, u in SITES.items()))
         await check_failed_jobs(c)
+    await check_backups()
 
 
 async def monitor_loop():
@@ -362,6 +392,12 @@ async def tasks(limit: int = 20):
 def snapshot() -> dict:
     return {k: {kk: v.get(kk) for kk in ("ok", "detail", "since", "checked", "models")}
             for k, v in sorted(STATE.items())}
+
+
+@app.get("/backups")
+async def backups():
+    """newest backup per Pi (names and dates only, never contents)"""
+    return await asyncio.to_thread(latest_backups)
 
 
 @app.get("/health")

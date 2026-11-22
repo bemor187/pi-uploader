@@ -38,7 +38,9 @@ tailscale status | head -n 5
 
 step "App code -> $APP"
 mkdir -p "$APP"
-rsync -a --delete --exclude venv "$SRC/" "$APP/"
+# keep this Pi's calibrated Clapper steps on re-runs (the repo copy is only a first guess)
+KEEP_FLOW=(); [[ -f "$APP/lanes/clapper/clapper_flow.json" ]] && KEEP_FLOW=(--exclude lanes/clapper/clapper_flow.json)
+rsync -a --delete --exclude venv "${KEEP_FLOW[@]}" "$SRC/" "$APP/"
 if [[ $ROLE != web ]]; then   # web runs no Python
   python3 -m venv "$APP/venv"
   "$APP/venv/bin/pip" install -q --upgrade pip
@@ -183,6 +185,14 @@ step "Enable $UNIT"
 systemctl daemon-reload
 systemctl enable --now "$UNIT"
 [[ $UNIT == nginx.service ]] && systemctl reload nginx                        # pick up the web site config
+step "Nightly backup (pi-backup.timer) -> /var/backups/pi-stack, copy sent to overseer"
+cp "$APP/systemd/pi-backup.service" "$APP/systemd/pi-backup.timer" /etc/systemd/system/
+if [[ $ROLE == overseer || $ROLE == brain ]]; then
+  # overseer collects everyone's backups; brain collects overseer's
+  cp "$APP/systemd/pi-backup-receiver.service" /etc/systemd/system/
+  systemctl daemon-reload && systemctl enable --now pi-backup-receiver.service
+fi
+systemctl daemon-reload && systemctl enable --now pi-backup.timer
 sleep 3
 systemctl --no-pager --lines=5 status "$UNIT" || true
 echo

@@ -1,0 +1,10 @@
+[Unit]
+Description=Pi stack backup (config, logins, data) -> /var/backups/pi-stack + overseer
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/uploader/scripts/backup.sh
+Nice=10
+IOSchedulingClass=idle
