@@ -34,7 +34,7 @@ if ! tailscale status >/dev/null 2>&1; then
 else
   tailscale set --ssh   # Tailscale SSH: manage the Pi from any tailnet device, no keys to copy
 fi
-tailscale status | head -n 5
+tailscale status | sed -n 1,5p   # not head: SIGPIPE + pipefail would abort setup
 
 step "App code -> $APP"
 mkdir -p "$APP"
