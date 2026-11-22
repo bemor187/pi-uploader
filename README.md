@@ -1,8 +1,7 @@
 # Pi Uploader Cluster
 
 A seven-Pi stack. At its core is a headless upload system for TikTok, Instagram and Clapper:
-Grokbot / Claude Code POST a video to **brain**, which queues it and sends it on. TikTok and
-Instagram go out through **postiz** (official platform APIs); Clapper goes to its phone lane.
+Grokbot / Claude Code POST a video to **brain**, which queues it and hands it to the right lane.
 Once brain accepts the job, nothing else needs to stay on. Around it sit a static web host
 (**web**), a self-hosted social scheduler (**postiz**) and an always-on AI tasker that watches
 everything (**overseer**). Setup, logins and day-to-day running are all done from a phone.
@@ -10,11 +9,11 @@ everything (**overseer**). Setup, logins and day-to-day running are all done fro
 | Host | Model | Role | Service | Port |
 |---|---|---|---|---|
 | brain | Pi 5 4GB | API + SQLite queue + dispatcher, behind nginx | `uploader-brain` | 80 (nginx) → 8000 |
-| tiktok | Pi 4 4GB | *Spare.* TikTok now posts via postiz. Browser lane kept as a fallback | (`uploader-lane@tiktok`) | (8100) |
-| insta | Pi 4 4GB | *Spare.* Instagram now posts via postiz. Browser lane kept as a fallback | (`uploader-lane@insta`) | (8100) |
+| tiktok | Pi 4 4GB | Playwright Chromium → TikTok Studio web | `uploader-lane@tiktok` | 8100 |
+| insta | Pi 4 4GB | Playwright Chromium → instagram.com Reels | `uploader-lane@insta` | 8100 |
 | clapper | Pi 4 4GB | ADB → Clapper app on Pixel 3a | `uploader-lane@clapper` | 8100 |
 | web | Pi 4 4GB | nginx static host: HTML games + files | `nginx` | 80 |
-| postiz | Pi 4 4GB | Postiz self-hosted scheduler; brain posts TikTok + Instagram through its API | `postiz` (compose), `nginx` | 80 (nginx) → 4007 |
+| postiz | Pi 4 4GB | Postiz self-hosted social scheduler (Docker) | `postiz` (compose), `nginx` | 80 (nginx) → 4007 |
 | overseer | Pi 4 4GB | AI tasker (Ollama router) + cluster monitor/alerts | `overseer`, `ollama` | 8200 (11434 localhost only) |
 
 Every Pi runs Raspberry Pi OS Lite 64-bit, and each one's Tailscale hostname is its role name.
@@ -42,16 +41,14 @@ Give the lanes the same LANE_TOKEN:
 curl -fsSL https://raw.githubusercontent.com/bemor187/pi-uploader/main/scripts/bootstrap.sh | sudo LANE_TOKEN=<from brain> bash -s tiktok
 ```
 
-Do the same for `clapper`. (`tiktok` and `insta` only if you go back to the browser lanes. See 4e.) `web` and `postiz` need no token (`... | sudo bash -s web`),
+Do the same for `insta` and `clapper`. `web` and `postiz` need no token (`... | sudo bash -s web`),
 and overseer takes brain's API_TOKEN (section 4b). To update later, re-run the same line; it pulls the latest code and keeps your config.
 Health check from the phone's browser (Tailscale on): `http://brain/health`.
 
 Turn on MagicDNS in the Tailscale admin console so `brain`, `tiktok` and the other hostnames resolve.
 Disable key expiry for all seven Pis there too.
 
-## 2. Log the browser lanes in, from your phone (fallback only)
-
-*Only needed if you set `POSTIZ_PLATFORMS=` on brain to go back to the TikTok/Instagram browser lanes.*
+## 2. Log the browser lanes in, from your phone
 
 On your phone (Tailscale connected), open:
 
@@ -100,7 +97,7 @@ curl -X POST http://brain/upload \
 # -> {"jobs":[{"job_id":"a1b2c3d4e5f6","platform":"tiktok"}, ...]}  (plus "job_id" when one platform)
 
 curl -H "Authorization: Bearer $API_TOKEN" http://brain/status/a1b2c3d4e5f6
-# status: queued | running | submitted (Postiz has it) | done | failed, with detail
+# status: queued | running | done | failed, with detail
 
 curl -H "Authorization: Bearer $API_TOKEN" http://brain/jobs
 curl -X POST -H "Authorization: Bearer $API_TOKEN" http://brain/retry/a1b2c3d4e5f6
@@ -140,7 +137,7 @@ and run `sudo systemctl restart overseer`. MSI and MacBook need `OLLAMA_HOST=0.0
 - `POST http://overseer:8200/task` with `Authorization: Bearer $TASK_TOKEN` and `{"prompt": "..."}`. Tasks go to MSI first, then the MacBook, then the local model.
   Add `"agent": "msi"` (and optionally `"model"`) to pin a task to one agent.
 - `http://overseer:8200/` shows the status page. `/health` returns JSON. `/digest?token=$TASK_TOKEN` gives a plain-English summary from the local model.
-- Every 60s it checks each Ollama agent, brain, the lanes in `MONITOR_LANES` (clapper by default), and the hosts in `SITES` (web and postiz by default). It sends an ntfy alert when one goes down (2 failed checks in a row) or comes back up, and for each newly failed upload.
+- Every 60s it checks each Ollama agent, brain, the three lanes, and the hosts in `SITES` (web and postiz by default). It sends an ntfy alert when one goes down (2 failed checks in a row) or comes back up, and for each newly failed upload.
 - Auto-retry happens **once per job**, and only when brain says `lane unreachable:`. That means the lane never got the video, so it can't have been posted. Any other failure is alert-only.
 
 ## 4c. web (static games + files)
@@ -181,41 +178,11 @@ nginx on port 80 is the way in, because Docker-published ports would skip ufw. S
 4. To upgrade: `cd /opt/postiz && sudo docker compose pull && sudo docker compose up -d`. To pin a version, set `POSTIZ_TAG` in `.env`.
 5. The Temporal UI runs on the Pi's localhost only: `ssh -L 8080:localhost:8080 bemor@postiz`, then open `http://localhost:8080`.
 
-Brain sends TikTok and Instagram posts through Postiz. Section 4e connects them.
-You can still schedule posts by hand in the Postiz UI too.
+**Postiz and brain are separate.** Postiz posts through each platform's official API, while the lanes drive the web or app UI.
+If an account is connected in both, a video sent to both gets posted twice. Use one route per account,
+for example Postiz for YouTube/X/Threads, and brain for TikTok/Instagram/Clapper.
 
 Memory: the stack uses roughly 2.5–3 GB, so setup adds swap. Keep this Pi doing only this job.
-
-## 4e. TikTok + Instagram through Postiz
-
-`POST /upload` with `platform=tiktok` or `insta` works as before. Brain uploads the video to Postiz,
-creates the post with `"type": "now"`, and tracks it. Clapper still goes to its lane.
-Job status: `queued → running → submitted` (Postiz has it) `→ done` (detail has the post URL) or `failed`
-(detail has the platform's error). Postiz only takes **.mp4** for these two.
-
-1. **Make Postiz public.** TikTok and Instagram download the video from Postiz's media URL, so it has to be reachable on the internet over HTTPS.
-   In the Tailscale admin console, enable HTTPS and Funnel for `postiz`. Then on postiz:
-   `curl -fsSL .../bootstrap.sh | sudo POSTIZ_PUBLIC=1 bash -s postiz`.
-   Postiz is now at `https://postiz.<tailnet>.ts.net`. Its login is the only lock, so set `DISABLE_REGISTRATION=true` once your account exists.
-2. **Create the developer apps** and put their keys in `/opt/postiz/postiz.env`, then run `cd /opt/postiz && sudo docker compose up -d`:
-   - TikTok (developers.tiktok.com, Content Posting API): `TIKTOK_CLIENT_ID`, `TIKTOK_CLIENT_SECRET`.
-     Redirect URI: `https://postiz.<tailnet>.ts.net/integrations/social/tiktok`.
-     Until TikTok audits the app, posts may be limited to private (`SELF_ONLY`). Set `TIKTOK_PRIVACY` on brain to match.
-   - Instagram, which must be a professional account. Standalone: `INSTAGRAM_APP_ID` / `INSTAGRAM_APP_SECRET`, redirect `/integrations/social/instagram-standalone`.
-     Or via a Facebook Page: `FACEBOOK_APP_ID` / `FACEBOOK_APP_SECRET`, redirect `/integrations/social/instagram`.
-     Until Meta approves the app, add your account as a tester.
-3. **Connect both channels** in the Postiz UI (Add Channel).
-4. **Give brain an API key.** In Postiz, go to Settings → Developers / Public API and copy the key.
-   On brain, run `sudo nano /etc/uploader.env`, set `POSTIZ_API_KEY=...`, and save. Optionally set
-   `POSTIZ_TIKTOK_ID` / `POSTIZ_INSTA_ID`; if you leave them empty, brain picks the only connected channel of each type.
-   Then run `sudo systemctl restart uploader-brain`.
-   `http://brain/health` shows `"routes"` and `"postiz": "ok"`.
-
-Limits: by default Postiz allows 90 post creations an hour (`API_LIMIT` in `/opt/postiz/docker-compose.yml`).
-When it's hit, brain backs off and retries. Brain checks post outcomes every `POSTIZ_POLL` seconds (300 by default),
-because Postiz allows only 30 post-list calls an hour.
-Failures before Postiz accepts the post are retried automatically. After that, brain never re-posts on its own.
-**Going back to the browser lanes:** set `POSTIZ_PLATFORMS=` on brain, set up the `tiktok`/`insta` Pis, and add them to `MONITOR_LANES` on overseer.
 
 ## 5. Hardening (Phase 4)
 
@@ -238,7 +205,7 @@ Updating code: `git -C ~/pi-uploader pull && sudo ~/pi-uploader/scripts/update.s
 On web it reloads nginx, and on postiz it re-applies the compose file without pulling new images. It doesn't upgrade system packages, and it keeps `/etc/uploader.env` and the Pi's Clapper steps. Re-running the bootstrap line also works, and it does a full upgrade.
 
 ## Known limits
-- (Browser lanes only) TikTok and Instagram change their web UIs. When a step breaks, the failure screenshot shows which one.
+- TikTok and Instagram change their web UIs. When a step breaks, the failure screenshot shows which one.
   The selectors are near the top of each `lanes/*/app.py`.
 - Clapper's confirmation step is optional until calibrated, so before then "done" means the Post button was tapped.
 - Automated posting can trigger platform checks (captchas, "suspicious login"). Uploading at human-like rates helps.

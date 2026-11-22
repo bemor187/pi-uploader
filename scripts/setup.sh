@@ -8,9 +8,8 @@
 # On the lanes, pass the same LANE_TOKEN:  sudo LANE_TOKEN=xxxx ./scripts/setup.sh tiktok
 # On overseer, pass brain's API_TOKEN:      sudo API_TOKEN=xxxx ./scripts/setup.sh overseer
 # web and postiz need no tokens. Add FUNNEL=1 on brain or web to publish it over public HTTPS.
-# On postiz, POSTIZ_PUBLIC=1 publishes it at https://postiz.<tailnet>.ts.net via Tailscale Funnel.
-# TikTok and Instagram fetch the video from Postiz's media URL, so they need this.
-# POSTIZ_HTTPS=1 gives the same address tailnet-only (fine for platforms that take uploads).
+# POSTIZ_HTTPS=1 on postiz serves it at https://postiz.<tailnet>.ts.net (tailnet only), which
+# social OAuth apps need.
 set -euo pipefail
 
 ROLE="${1:-}"
@@ -85,9 +84,6 @@ case "$ROLE" in
     ln -sf /etc/nginx/sites-available/uploader /etc/nginx/sites-enabled/uploader
     rm -f /etc/nginx/sites-enabled/default
     nginx -t && systemctl enable --now nginx && systemctl reload nginx
-    env_default POSTIZ_PLATFORMS tiktok,insta
-    env_default POSTIZ_API http://postiz/api/public/v1
-    env_default POSTIZ_API_KEY ""
     if [[ "${FUNNEL:-0}" == 1 ]]; then
       step "Tailscale Funnel: public HTTPS -> brain (API_TOKEN required on every request)"
       tailscale funnel --bg 80 || echo "Funnel failed: enable HTTPS + Funnel for this node in the Tailscale admin console, then: sudo tailscale funnel --bg 80"
@@ -155,7 +151,6 @@ case "$ROLE" in
     PZ=/opt/postiz
     mkdir -p "$PZ"
     rsync -a "$APP/postiz/docker-compose.yml" "$APP/postiz/dynamicconfig" "$PZ/"
-    if [[ "${POSTIZ_PUBLIC:-0}" == 1 ]]; then POSTIZ_HTTPS=1; fi
     if [[ "${POSTIZ_HTTPS:-0}" == 1 ]]; then
       TSNAME="$(tailscale status --json | python3 -c 'import json,sys; print(json.load(sys.stdin)["Self"]["DNSName"].rstrip("."))')"
       PZURL="https://$TSNAME"; PZSECURE=false
@@ -187,10 +182,7 @@ PZENV
     ln -sf /etc/nginx/sites-available/postiz /etc/nginx/sites-enabled/postiz
     rm -f /etc/nginx/sites-enabled/default
     nginx -t && systemctl enable --now nginx && systemctl reload nginx
-    if [[ "${POSTIZ_PUBLIC:-0}" == 1 ]]; then
-      tailscale funnel --bg 80 || echo "Funnel failed: enable HTTPS + Funnel for this node in the Tailscale admin console, then: sudo tailscale funnel --bg 80"
-      tailscale funnel status || true
-    elif [[ "${POSTIZ_HTTPS:-0}" == 1 ]]; then
+    if [[ "${POSTIZ_HTTPS:-0}" == 1 ]]; then
       tailscale serve --bg 80 || echo "tailscale serve failed: enable HTTPS certificates in the Tailscale admin console, then: sudo tailscale serve --bg 80"
     fi
 
@@ -209,7 +201,6 @@ PZENV
     env_default AGENTS "msi=ollama:http://msi:11434|qwen3:14b,macbook=ollama:http://macbook:11434,local=ollama:http://127.0.0.1:11434|qwen2.5:1.5b"
     env_default BRAIN_URL http://brain
     env_default SITES "web=http://web/health,postiz=http://postiz/"
-    env_default MONITOR_LANES clapper
     env_default ALERT_URL ""
     env_default OLLAMA_MODEL qwen2.5:1.5b
 

@@ -50,14 +50,10 @@ DEFAULT_AGENTS = (
     "macbook=ollama:http://macbook:11434,"
     "local=ollama:http://127.0.0.1:11434|qwen2.5:1.5b"
 )
-# Lane Pis to watch. TikTok and Instagram post through Postiz now (watched via SITES),
-# so only clapper by default; add "tiktok,insta" back if you return to the browser lanes.
-_LANE_DEFAULTS = {"tiktok": "http://tiktok:8100", "insta": "http://insta:8100",
-                  "clapper": "http://clapper:8100"}
 LANES = {
-    n: os.environ.get(f"LANE_{n.upper()}", _LANE_DEFAULTS.get(n, f"http://{n}:8100"))
-    for n in (x.strip() for x in os.environ.get("MONITOR_LANES", "clapper").split(","))
-    if n
+    "tiktok": os.environ.get("LANE_TIKTOK", "http://tiktok:8100"),
+    "insta": os.environ.get("LANE_INSTA", "http://insta:8100"),
+    "clapper": os.environ.get("LANE_CLAPPER", "http://clapper:8100"),
 }
 # Other hosts in the stack: name=URL,...  Any HTTP status below 400 counts as up
 # (Postiz answers / with a redirect to its login page).
