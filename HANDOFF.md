@@ -24,7 +24,7 @@ Stop and hand to the user only for the steps marked **HUMAN**. Give them the exa
 | [ ] | G3 brain reaches all lanes | `goals.sh G3` | `journalctl -u uploader-lane@<lane>`; check `LANE_*` URLs in brain's env |
 | [x] | G4 overseer green + ntfy alerts | `goals.sh G4` | Set `ALERT_URL=https://ntfy.sh/<random topic>` in overseer's `/etc/uploader.env`, `sudo systemctl restart overseer`, tell the user the topic so they can subscribe |
 | [ ] | G5 overseer can use the MSI's Ollama | `goals.sh G5` | On the MSI: `setx OLLAMA_HOST 0.0.0.0`, restart Ollama, allow port 11434 on Tailscale in Windows Firewall |
-| [ ] | G6 TikTok + Instagram logged in — **HUMAN** | `goals.sh G6` | Give the user `http://tiktok:8100/login?token=<LANE_TOKEN>` (then `/login/done?token=…`), same for insta |
+| [ ] | G6 TikTok + Instagram logged in — **HUMAN** | `goals.sh G6` | Meta rejects logins made on the Pi ("wrong password"), so log in from the PC: on the MSI run `python scripts/export-login.py insta` (same for `tiktok` if needed). The user logs in in the window it opens; the script copies the session to the Pi. Fallback: `http://<lane>:8100/login?token=<LANE_TOKEN>` |
 | [ ] | G7 Pixel on clapper — **HUMAN** | `goals.sh G7` | User plugs in the Pixel 3a and accepts USB debugging; then calibrate (README §3) |
 | [x] | G8 PR #2 merged + deployed | `goals.sh G8` | Merge PR #2 (`check-update-recover`), then on each Pi: `~/pi-uploader/scripts/update.sh` |
 | [ ] | G9 One successful upload per lane | `goals.sh G9` | `POST http://brain/upload` a short test video per platform (README §4); watch `/jobs` |
@@ -49,8 +49,15 @@ Stop and hand to the user only for the steps marked **HUMAN**. Give them the exa
 
 - 2026-11-22 **HUMAN — insta Pi offline since 15:41** (overseer sent the ntfy alert). No ping, no SSH, Tailscale offline. Its power or network cable was probably knocked loose when the Pixel was moved off it. Power-cycle it, then do the Instagram login (G6) and an insta test post (G9).
 
+- 2026-11-22 Meta also rejects Facebook logins made on the Pi ("wrong password", no recovery), but the same login works on phone and web. **Preferred route for Instagram now:** once insta is back up, on the MSI run `python scripts/export-login.py insta` (one-time setup: `pip install playwright` and `python -m playwright install chromium`). The user logs in on the PC and the script copies the session to the Pi, which avoids the Pi-side challenge.
+
+## Open decisions
+
+- **Postiz (revisited 2026-11-22).** The user's Instagram is a Creator account, so Postiz's "Instagram Standalone" provider (Instagram login, `INSTAGRAM_APP_ID`/`SECRET`, no Facebook Page needed) is a fallback if the insta lane keeps getting checkpointed. The user's Facebook is a **personal profile**, which no Meta API (Postiz included) can post to, so Facebook would need a new Playwright `facebook` lane using the same PC-login route. Postiz needs Postgres + Redis + Temporal, which is tight on the spare Pi 4 (4 GB). The user has a thumbdrive in the MSI meant for Postiz; its role (spare Pi boot drive?) is unconfirmed. Don't build either until the user picks.
+
 ## Log
 
+- 2026-11-22: Added `scripts/export-login.py` (log in on the PC, then copy the session to the lane Pi).
 - 2026-11-22: All Pis joined Tailscale and SSH works (G1). Earlier the same day, overseer wasn't bootstrapped and the lanes showed offline, so start at G2.
 - 2026-11-22: First loop run. G3, G5 and G7 pass. G1 broke because the MSI `~/.ssh/config` mapped hosts to `%h.local` and `tiktok.local` stopped resolving. The config now uses Tailscale names (backup at `~/.ssh/config.bak-20261122`) and G1 passes again. tiktok's SSH host key matches the old `192.168.1.206` entry, which is now web's LAN IP; they may be cloned images with the same host key. Stopped at G2: blocked on sudo (see Blockers).
 - 2026-11-22: Loop run 2. **G2:** overseer bootstrap had been dying silently after the Tailscale step: `tailscale status | head -n 5` hit SIGPIPE under pipefail once the tailnet had more than 5 peers. Fixed in 52347ce; overseer and ollama are now active. **G8:** `update.sh` deployed on all 6 Pis. clapper needed a `git pull` first, and 4 Pis needed a second run, because the first run executes the pre-pull copy of update.sh. Removed the `macbook` agent from overseer's AGENTS (that machine isn't on the tailnet). overseer `/health` reports nothing down. Passing now: G1 G2 G3 G5 G7 G8. Next: G4 (OK on ntfy), G6 (HUMAN logins), G9 (OK to make real test posts), G10.
