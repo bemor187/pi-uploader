@@ -153,6 +153,9 @@ async def push_and_index(video: Path, job_id: str) -> str:
     remote = f"{REMOTE_DIR}/{job_id}{video.suffix}"
     await shell(f"mkdir -p {REMOTE_DIR}")
     await adb("push", str(video), remote, timeout=600)
+    # adb push keeps the source mtime; the flow picks the NEWEST gallery item, so stamp it now
+    # or an older clip would sort below existing videos and the wrong one would be posted.
+    await shell(f"touch {remote}")
     await shell(f"am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://{remote}", check=False)
     name = Path(remote).name
     for _ in range(20):
