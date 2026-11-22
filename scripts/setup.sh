@@ -2,15 +2,17 @@
 # One-shot setup for a Pi in the uploader cluster.
 #   scp -r pi-uploader <user>@<pi>.local:~
 #   ssh <user>@<pi>.local
-#   cd pi-uploader && sudo ./scripts/setup.sh brain|tiktok|insta|clapper|overseer
+#   cd pi-uploader && sudo ./scripts/setup.sh brain|tiktok|insta|clapper|web|overseer
 #
 # Tokens: on brain, leave them unset and the script generates both and prints them.
 # On the lanes, pass the same LANE_TOKEN:  sudo LANE_TOKEN=xxxx ./scripts/setup.sh tiktok
 # On overseer, pass brain's API_TOKEN:      sudo API_TOKEN=xxxx ./scripts/setup.sh overseer
+# web needs no token. Add FUNNEL=1 on brain or web to publish it over public HTTPS.
 set -euo pipefail
 
 ROLE="${1:-}"
-case "$ROLE" in brain|tiktok|insta|clapper|overseer) ;; *) echo "usage: sudo $0 brain|tiktok|insta|clapper|overseer"; exit 1;; esac
+ROLES="brain|tiktok|insta|clapper|web|overseer"
+case "$ROLE" in brain|tiktok|insta|clapper|web|overseer) ;; *) echo "usage: sudo $0 $ROLES"; exit 1;; esac
 [[ $EUID -eq 0 ]] || { echo "run with sudo"; exit 1; }
 RUN_USER="${SUDO_USER:-$(logname)}"
 RUN_HOME="$(getent passwd "$RUN_USER" | cut -d: -f6)"
@@ -37,8 +39,10 @@ tailscale status | head -n 5
 step "App code -> $APP"
 mkdir -p "$APP"
 rsync -a --delete --exclude venv "$SRC/" "$APP/"
-python3 -m venv "$APP/venv"
-"$APP/venv/bin/pip" install -q --upgrade pip
+if [[ $ROLE != web ]]; then   # web runs no Python
+  python3 -m venv "$APP/venv"
+  "$APP/venv/bin/pip" install -q --upgrade pip
+fi
 chown -R "$RUN_USER:$RUN_USER" "$APP"
 
 step "Config $ENVF"
@@ -112,6 +116,25 @@ case "$ROLE" in
     usermod -aG plugdev "$RUN_USER"
     sudo -u "$RUN_USER" mkdir -p "$RUN_HOME/uploader-work"
     ;;
+  web)
+    step "web: nginx static host (HTML games + files)"
+    apt-get install -y nginx
+    mkdir -p /srv/web/games /srv/web/files
+    [[ -f /srv/web/index.html ]] || cp "$APP/web/site/index.html" /srv/web/index.html
+    chown -R "$RUN_USER:$RUN_USER" /srv/web
+    grep -q 'application/wasm' /etc/nginx/mime.types || \
+      sed -i 's|^}|    application/wasm                      wasm;\n}|' /etc/nginx/mime.types
+    cp "$APP/web/nginx-web.conf" /etc/nginx/sites-available/web
+    ln -sf /etc/nginx/sites-available/web /etc/nginx/sites-enabled/web
+    rm -f /etc/nginx/sites-enabled/default
+    nginx -t
+    if [[ "${FUNNEL:-0}" == 1 ]]; then
+      step "Tailscale Funnel: public HTTPS -> web"
+      tailscale funnel --bg 80 || echo "Funnel failed: enable HTTPS + Funnel for this node in the Tailscale admin console, then: sudo tailscale funnel --bg 80"
+      tailscale funnel status || true
+    fi
+    UNIT=nginx.service
+    ;;
   overseer)
     step "overseer: API + monitor"
     "$APP/venv/bin/pip" install -q -r "$APP/overseer/requirements.txt"
@@ -121,6 +144,7 @@ case "$ROLE" in
     grep -Eq '^TASK_TOKEN=.{16,}' "$ENVF" && ! grep -q '^TASK_TOKEN=change-me' "$ENVF"       || set_env TASK_TOKEN "$(openssl rand -hex 24)"
     env_default AGENTS "msi=ollama:http://msi:11434|qwen3:14b,macbook=ollama:http://macbook:11434,local=ollama:http://127.0.0.1:11434|qwen2.5:1.5b"
     env_default BRAIN_URL http://brain
+    env_default SITES "web=http://web/health"
     env_default ALERT_URL ""
     env_default OLLAMA_MODEL qwen2.5:1.5b
 
@@ -158,6 +182,7 @@ ufw --force enable
 step "Enable $UNIT"
 systemctl daemon-reload
 systemctl enable --now "$UNIT"
+[[ $UNIT == nginx.service ]] && systemctl reload nginx                        # pick up the web site config
 sleep 3
 systemctl --no-pager --lines=5 status "$UNIT" || true
 echo
@@ -169,4 +194,10 @@ if [[ $ROLE == overseer ]]; then
   echo "TASK_TOKEN=$(grep -m1 '^TASK_TOKEN=' "$ENVF" | cut -d= -f2)   <- for POST http://overseer:8200/task"
   echo "Edit $ENVF (ALERT_URL=https://ntfy.sh/<topic>, AGENTS, BRAIN_URL), then: sudo systemctl restart overseer"
   echo "Status page: http://overseer:8200/"
+fi
+if [[ $ROLE == web ]]; then
+  curl -fsS http://127.0.0.1/health >/dev/null && echo "web /health: OK" || echo "web /health: NOT responding (journalctl -u nginx)"
+  echo "Put games in /srv/web/games/<name>/ and files in /srv/web/files/, e.g. from another tailnet machine:"
+  echo "  rsync -av mygame/ $RUN_USER@web:/srv/web/games/mygame/"
+  echo "Browse: http://web/"
 fi

@@ -1,9 +1,9 @@
 # Pi Uploader Cluster
 
-Headless upload system for TikTok, Instagram and Clapper. Grokbot / Claude Code
-POST a video to **brain**, which queues it and hands it to the right lane. Once
-brain accepts the job, nothing else needs to stay on. Setup, logins and
-day-to-day running are all done from a phone.
+A six-Pi stack (plus one spare Pi 4). At its core is a headless upload system for TikTok, Instagram and Clapper:
+Grokbot / Claude Code POST a video to **brain**, which queues it and hands it to the right lane.
+Once brain accepts the job, nothing else needs to stay on. Around it sit a static web host
+(**web**) and an always-on AI tasker that watches everything (**overseer**). Setup, logins and day-to-day running are all done from a phone.
 
 | Host | Model | Role | Service | Port |
 |---|---|---|---|---|
@@ -11,7 +11,10 @@ day-to-day running are all done from a phone.
 | tiktok | Pi 4 4GB | Playwright Chromium → TikTok Studio web | `uploader-lane@tiktok` | 8100 |
 | insta | Pi 4 4GB | Playwright Chromium → instagram.com Reels | `uploader-lane@insta` | 8100 |
 | clapper | Pi 4 4GB | ADB → Clapper app on Pixel 3a | `uploader-lane@clapper` | 8100 |
+| web | Pi 4 4GB | nginx static host: HTML games + files | `nginx` | 80 |
 | overseer | Pi 4 4GB | AI tasker (Ollama router) + cluster monitor/alerts | `overseer`, `ollama` | 8200 (11434 localhost only) |
+
+Every Pi runs Raspberry Pi OS Lite 64-bit, and each one's Tailscale hostname is its role name.
 
 Everything except SSH is firewalled (ufw) to the `tailscale0` interface.
 The job queue uses SQLite rather than Redis: one less daemon, and it survives reboots.
@@ -36,11 +39,12 @@ Give the lanes the same LANE_TOKEN:
 curl -fsSL https://raw.githubusercontent.com/bemor187/pi-uploader/main/scripts/bootstrap.sh | sudo LANE_TOKEN=<from brain> bash -s tiktok
 ```
 
-Do the same for `insta` and `clapper`. To update later, re-run the same line; it pulls the latest code and keeps your config.
+Do the same for `insta` and `clapper`. `web` needs no token (`... | sudo bash -s web`),
+and overseer takes brain's API_TOKEN (section 4b). To update later, re-run the same line; it pulls the latest code and keeps your config.
 Health check from the phone's browser (Tailscale on): `http://brain/health`.
 
 Turn on MagicDNS in the Tailscale admin console so `brain`, `tiktok` and the other hostnames resolve.
-Disable key expiry for the four Pis there too.
+Disable key expiry for all the Pis there too.
 
 ## 2. Log the browser lanes in, from your phone
 
@@ -131,8 +135,28 @@ and run `sudo systemctl restart overseer`. MSI and MacBook need `OLLAMA_HOST=0.0
 - `POST http://overseer:8200/task` with `Authorization: Bearer $TASK_TOKEN` and `{"prompt": "..."}`. Tasks go to MSI first, then the MacBook, then the local model.
   Add `"agent": "msi"` (and optionally `"model"`) to pin a task to one agent.
 - `http://overseer:8200/` shows the status page. `/health` returns JSON. `/digest?token=$TASK_TOKEN` gives a plain-English summary from the local model.
-- Every 60s it checks each Ollama agent, brain and the three lanes. It sends an ntfy alert when one goes down (2 failed checks in a row) or comes back up, and for each newly failed upload.
+- Every 60s it checks each Ollama agent, brain, the three lanes, and the hosts in `SITES` (web by default). It sends an ntfy alert when one goes down (2 failed checks in a row) or comes back up, and for each newly failed upload.
 - Auto-retry happens **once per job**, and only when brain says `lane unreachable:`. That means the lane never got the video, so it can't have been posted. Any other failure is alert-only.
+
+## 4c. web (static games + files)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bemor187/pi-uploader/main/scripts/bootstrap.sh | sudo bash -s web
+```
+
+nginx serves `/srv/web` (owned by your Pi user) on port 80, tailnet only:
+
+| Path on the Pi | URL |
+|---|---|
+| `/srv/web/index.html` | `http://web/` (a starter page; setup never overwrites yours) |
+| `/srv/web/games/<name>/index.html` | `http://web/games/<name>/` |
+| `/srv/web/files/` | `http://web/files/` (directory listing) |
+| — | `http://web/health` (for overseer) |
+
+Copy things over from any tailnet machine: `rsync -av mygame/ bemor@web:/srv/web/games/mygame/`.
+Games get `Cross-Origin-Opener/Embedder-Policy` headers, so threaded Godot/Unity web exports work, and `.wasm` is served as `application/wasm`.
+To share games publicly, enable HTTPS + Funnel for `web` in the Tailscale admin console and re-run with `FUNNEL=1`.
+The address becomes `https://web.<tailnet>.ts.net/`, and everything on the Pi is then public, files included.
 
 ## 5. Hardening (Phase 4)
 
@@ -144,12 +168,13 @@ setup.sh adds 2 GB of swap on the browser lanes when the OS uses dphys-swapfile.
 ## Operations
 
 ```bash
-sudo systemctl status uploader-brain            # or uploader-lane@tiktok etc.
+sudo systemctl status uploader-brain            # or uploader-lane@tiktok, overseer, nginx (web)
 journalctl -u uploader-lane@insta -f             # live logs
 ls ~/uploader-work/debug/                         # failure screenshots (browser + phone)
 sudo nano /etc/uploader.env && sudo systemctl restart <unit>
 ```
-Updating code: `git -C ~/pi-uploader pull && sudo ~/pi-uploader/scripts/update.sh` pulls the code and restarts the services. It doesn't upgrade system packages, and it keeps `/etc/uploader.env` and the Pi's Clapper steps. Re-running the bootstrap line also works, and it does a full upgrade.
+Updating code: `git -C ~/pi-uploader pull && sudo ~/pi-uploader/scripts/update.sh` pulls the code and restarts the services.
+On web it reloads nginx. It doesn't upgrade system packages, and it keeps `/etc/uploader.env` and the Pi's Clapper steps. Re-running the bootstrap line also works, and it does a full upgrade.
 
 ## Known limits
 - TikTok and Instagram change their web UIs. When a step breaks, the failure screenshot shows which one.
