@@ -22,7 +22,7 @@ Stop and hand to the user only for the steps marked **HUMAN**. Give them the exa
 | [x] | G1 All 6 Pis on Tailscale + SSH | `goals.sh G1` | Done 2026-11-22 (user) |
 | [x] | G2 Each role's services installed + active | `goals.sh G2` | Re-run bootstrap on that Pi (README §1, §4b). Lanes need brain's `LANE_TOKEN`, overseer needs brain's `API_TOKEN` (`sudo grep TOKEN /etc/uploader.env` on brain) |
 | [ ] | G3 brain reaches all lanes | `goals.sh G3` | `journalctl -u uploader-lane@<lane>`; check `LANE_*` URLs in brain's env |
-| [ ] | G4 overseer green + ntfy alerts | `goals.sh G4` | Set `ALERT_URL=https://ntfy.sh/<random topic>` in overseer's `/etc/uploader.env`, `sudo systemctl restart overseer`, tell the user the topic so they can subscribe |
+| [x] | G4 overseer green + ntfy alerts | `goals.sh G4` | Set `ALERT_URL=https://ntfy.sh/<random topic>` in overseer's `/etc/uploader.env`, `sudo systemctl restart overseer`, tell the user the topic so they can subscribe |
 | [ ] | G5 overseer can use the MSI's Ollama | `goals.sh G5` | On the MSI: `setx OLLAMA_HOST 0.0.0.0`, restart Ollama, allow port 11434 on Tailscale in Windows Firewall |
 | [ ] | G6 TikTok + Instagram logged in — **HUMAN** | `goals.sh G6` | Give the user `http://tiktok:8100/login?token=<LANE_TOKEN>` (then `/login/done?token=…`), same for insta |
 | [ ] | G7 Pixel on clapper — **HUMAN** | `goals.sh G7` | User plugs in the Pixel 3a and accepts USB debugging; then calibrate (README §3) |
@@ -42,10 +42,10 @@ Stop and hand to the user only for the steps marked **HUMAN**. Give them the exa
 
 - ~~2026-11-22 no passwordless sudo~~ Resolved the same day: the user added `/etc/sudoers.d/010-bemor-nopasswd` on all 6 Pis.
 - 2026-11-22 clapper runs Tailscale SSH in **check** mode, so every session waits for a browser re-auth. Workaround: the MSI's `~/.ssh/config` reaches clapper over `clapper.local`. Permanent fix once sudo works: `sudo tailscale set --ssh=false` on clapper (or set the tailnet SSH ACL to `accept`). Needs the user's OK because it weakens an auth check. Note: `setup.sh` runs `tailscale set --ssh` on every Pi, so re-running bootstrap turns Tailscale SSH back on.
-- 2026-11-22 **G4 waits on the user's OK** to send overseer alerts to a public `https://ntfy.sh/<random topic>` (an outside service).
 
 ## Log
 
 - 2026-11-22: All Pis joined Tailscale and SSH works (G1). Earlier the same day, overseer wasn't bootstrapped and the lanes showed offline, so start at G2.
 - 2026-11-22: First loop run. G3, G5 and G7 pass. G1 broke because the MSI `~/.ssh/config` mapped hosts to `%h.local` and `tiktok.local` stopped resolving. The config now uses Tailscale names (backup at `~/.ssh/config.bak-20261122`) and G1 passes again. tiktok's SSH host key matches the old `192.168.1.206` entry, which is now web's LAN IP; they may be cloned images with the same host key. Stopped at G2: blocked on sudo (see Blockers).
 - 2026-11-22: Loop run 2. **G2:** overseer bootstrap had been dying silently after the Tailscale step: `tailscale status | head -n 5` hit SIGPIPE under pipefail once the tailnet had more than 5 peers. Fixed in 52347ce; overseer and ollama are now active. **G8:** `update.sh` deployed on all 6 Pis. clapper needed a `git pull` first, and 4 Pis needed a second run, because the first run executes the pre-pull copy of update.sh. Removed the `macbook` agent from overseer's AGENTS (that machine isn't on the tailnet). overseer `/health` reports nothing down. Passing now: G1 G2 G3 G5 G7 G8. Next: G4 (OK on ntfy), G6 (HUMAN logins), G9 (OK to make real test posts), G10.
+- 2026-11-22: G4 passes. The user approved ntfy.sh and `ALERT_URL` is set on overseer; the user has the topic (it's in overseer's env, not this repo). A test alert was sent. Next: G6 (HUMAN logins), then G9.
