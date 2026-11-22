@@ -23,6 +23,21 @@ async def _logged_in(page) -> bool:
     return await page.locator('input[type="file"]').count() > 0
 
 
+async def _click_through_tours(page, target, tries: int = 6):
+    """Click target, clearing onboarding tours (react-joyride 'Got it' overlays) that pop up late."""
+    for i in range(tries):
+        await dismiss_popups(page)
+        await try_click(page, page.locator(".react-joyride__tooltip button"), 800)
+        try:
+            await target.click(timeout=5_000)
+            return
+        except Exception:
+            if i == tries - 1:
+                raise
+            await page.keyboard.press("Escape")
+            await asyncio.sleep(1)
+
+
 async def upload(video: Path, caption: str, job_id: str) -> dict:
     async with browser_page("tiktok") as page:
         try:
@@ -39,8 +54,7 @@ async def upload(video: Path, caption: str, job_id: str) -> dict:
             # Caption editor (DraftJS contenteditable) appears once the file is accepted.
             editor = page.locator('div[contenteditable="true"]').first
             await editor.wait_for(state="visible", timeout=180_000)
-            await dismiss_popups(page)
-            await editor.click()
+            await _click_through_tours(page, editor)
             await page.keyboard.press("Control+A")
             await page.keyboard.press("Backspace")  # TikTok prefills the filename
             await type_caption(page, caption)
