@@ -7,7 +7,8 @@ GET  /digest    plain-English cluster summary written by the local model
 GET  /health    overseer ok + latest monitor snapshot (no auth)
 GET  /          phone-friendly status page (no auth, read-only)
 
-Monitor (every MONITOR_INTERVAL s): every agent's Ollama, brain, each lane. Sends an ntfy
+Monitor (every MONITOR_INTERVAL s): every agent's Ollama, brain, each lane, and the other
+hosts in SITES (web, postiz). Sends an ntfy
 alert (ALERT_URL) on down/up transitions and on each newly failed upload job.
 Auto-retry: a failed job is retried via brain /retry at most ONCE, and only when brain's
 detail starts with "lane unreachable:" -- brain sets that only on connect errors, i.e. the
@@ -53,6 +54,14 @@ LANES = {
     "tiktok": os.environ.get("LANE_TIKTOK", "http://tiktok:8100"),
     "insta": os.environ.get("LANE_INSTA", "http://insta:8100"),
     "clapper": os.environ.get("LANE_CLAPPER", "http://clapper:8100"),
+}
+# Other hosts in the stack: name=URL,...  Any HTTP status below 400 counts as up
+# (Postiz answers / with a redirect to its login page).
+DEFAULT_SITES = "web=http://web/health,postiz=http://postiz/"
+SITES = {
+    n.strip(): u.strip()
+    for n, _, u in (s.partition("=") for s in os.environ.get("SITES", DEFAULT_SITES).split(",") if "=" in s)
+    if n.strip() and u.strip()
 }
 RETRYABLE_PREFIX = "lane unreachable:"
 
@@ -233,8 +242,19 @@ async def monitor_once():
             ok, detail, _ = await probe(c, f"{BRAIN_URL}/health")
             await record("brain", ok, detail)
 
+        async def site(name, url):
+            try:
+                r = await c.get(url)
+                ok, detail = r.status_code < 400, f"HTTP {r.status_code}"
+                if ok:
+                    detail = "ok" if r.status_code == 200 else f"ok ({r.status_code})"
+            except Exception as e:
+                ok, detail = False, f"unreachable: {type(e).__name__}"
+            await record(f"site:{name}", ok, detail)
+
         await asyncio.gather(*(agent(a) for a in AGENTS), brain(),
-                             *(lane(n, u) for n, u in LANES.items()))
+                             *(lane(n, u) for n, u in LANES.items()),
+                             *(site(n, u) for n, u in SITES.items()))
         await check_failed_jobs(c)
 
 
