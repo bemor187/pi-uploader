@@ -40,8 +40,11 @@ Stop and hand to the user only for the steps marked **HUMAN**. Give them the exa
 
 ## Blockers
 
-- (none logged yet)
+- 2026-11-22 **HUMAN — no passwordless sudo.** `bemor` needs a password for sudo on all 6 Pis, but bootstrap, `update.sh`, env reads and goals.sh (`sudo -n`) need root without a prompt. This blocks G2, G4, G6, G8, G9 and G10. Fix (user, once, from a real terminal; prompts for the Pi password):
+  `for h in brain tiktok insta clapper web overseer; do ssh -t $h "echo 'bemor ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/010-bemor-nopasswd >/dev/null && sudo chmod 440 /etc/sudoers.d/010-bemor-nopasswd && sudo visudo -cf /etc/sudoers.d/010-bemor-nopasswd"; done`
+- 2026-11-22 clapper runs Tailscale SSH in **check** mode, so every session waits for a browser re-auth. Workaround: the MSI's `~/.ssh/config` reaches clapper over `clapper.local`. Permanent fix once sudo works: `sudo tailscale set --ssh=false` on clapper (or set the tailnet SSH ACL to `accept`).
 
 ## Log
 
 - 2026-11-22: All Pis joined Tailscale and SSH works (G1). Earlier the same day, overseer wasn't bootstrapped and the lanes showed offline, so start at G2.
+- 2026-11-22: First loop run. G3, G5 and G7 pass. G1 broke because the MSI `~/.ssh/config` mapped hosts to `%h.local` and `tiktok.local` stopped resolving. The config now uses Tailscale names (backup at `~/.ssh/config.bak-20261122`) and G1 passes again. tiktok's SSH host key matches the old `192.168.1.206` entry, which is now web's LAN IP; they may be cloned images with the same host key. Stopped at G2: blocked on sudo (see Blockers).
