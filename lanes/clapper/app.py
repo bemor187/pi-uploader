@@ -63,7 +63,9 @@ _BOUNDS = re.compile(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]")
 
 
 async def dump_nodes() -> list[dict]:
-    await shell("uiautomator dump /sdcard/ui.xml", check=False, timeout=30)
+    # Remove the old dump first: uiautomator fails ("null root node") on busy screens like
+    # Clapper's autoplaying feed, and reading a stale file would show the previous screen.
+    await shell("rm -f /sdcard/ui.xml; uiautomator dump /sdcard/ui.xml", check=False, timeout=30)
     xml = await shell("cat /sdcard/ui.xml", check=False)
     start = xml.find("<?xml")
     if start < 0:
