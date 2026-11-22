@@ -14,7 +14,10 @@ from lanes.common.lane import DEBUG_DIR, LaneError, create_app
 
 UPLOAD_URL = "https://www.tiktok.com/tiktokstudio/upload?from=upload"
 PROCESS_TIMEOUT = int(os.environ.get("PROCESS_TIMEOUT", "900"))  # seconds for upload+processing
-VISIBILITY = os.environ.get("TIKTOK_VISIBILITY", "")  # "", "Everyone", "Friends", "Only me"  (TikTok renamed "Only you" -> "Only me")
+VISIBILITY = os.environ.get("TIKTOK_VISIBILITY", "")  # "", "Everyone", "Friends", "Only you" ("Only me" also accepted)
+_VIS_NAMES = {"only you": ("Only you", "Only me"), "only me": ("Only you", "Only me")}
+_VIS_LABEL = re.compile(r"^\s*Who can (see this post|watch this video)\s*$")
+_VIS_VALUES = re.compile(r"^\s*(Everyone|Friends|Only you|Only me)\s*$")
 
 
 async def _logged_in(page) -> bool:
@@ -36,6 +39,56 @@ async def _click_through_tours(page, target, tries: int = 6):
                 raise
             await page.keyboard.press("Escape")
             await asyncio.sleep(1)
+
+
+async def _set_visibility(page, want: str):
+    """Pick who can see the post and confirm it took; raise (so nothing posts) if it can't be confirmed."""
+    names = _VIS_NAMES.get(want.strip().lower(), (want.strip(),))
+    label = page.get_by_text(_VIS_LABEL).first
+    try:
+        await label.wait_for(state="visible", timeout=15_000)
+    except Exception:
+        raise LaneError("can't find TikTok's 'Who can see this post' setting; not posting (visibility unconfirmed)")
+    await label.scroll_into_view_if_needed()
+    # the nearest ancestor that also holds the current value is the setting's container
+    box = label.locator("xpath=ancestor::*[.//*[normalize-space(text())='Everyone' or normalize-space(text())='Friends'"
+                        " or normalize-space(text())='Only you' or normalize-space(text())='Only me']][1]")
+
+    async def current() -> str:
+        vals = [t.strip() for t in await box.get_by_text(_VIS_VALUES).all_inner_texts()]
+        return vals[0] if vals else ""
+
+    if await current() in names:
+        return
+    await box.get_by_text(_VIS_VALUES).first.click(timeout=5_000)
+    await asyncio.sleep(1)
+    for n in names:
+        opt = page.get_by_text(n, exact=True)
+        if await opt.count():
+            await opt.last.click(timeout=5_000)
+            break
+    await asyncio.sleep(1)
+    got = await current()
+    if got not in names:
+        raise LaneError(f"TikTok visibility shows {got!r}, wanted {want!r}; not posting")
+
+
+async def _ensure_caption(page, editor, caption: str):
+    """Make sure the description holds the caption (TikTok can refill it with the filename late)."""
+    first = next((ln.strip() for ln in caption.splitlines() if ln.strip()), "")
+    if not first:
+        return
+    for _ in range(3):
+        text = (await editor.inner_text()).strip()
+        if first[:40] in text:
+            return
+        await _click_through_tours(page, editor)
+        await page.keyboard.press("Control+A")
+        await page.keyboard.press("Backspace")
+        await type_caption(page, caption)
+        await page.keyboard.press("Escape")
+        await asyncio.sleep(1)
+    raise LaneError("caption didn't stick in TikTok's description box; not posting")
 
 
 async def upload(video: Path, caption: str, job_id: str) -> dict:
@@ -61,8 +114,7 @@ async def upload(video: Path, caption: str, job_id: str) -> dict:
             await page.keyboard.press("Escape")  # close any hashtag/mention suggestion box
 
             if VISIBILITY:
-                await try_click(page, page.get_by_text("Who can watch this video").locator(".."), 2000)
-                await try_click(page, page.get_by_text(VISIBILITY, exact=True), 2000)
+                await _set_visibility(page, VISIBILITY)
 
             post = page.locator('button[data-e2e="post_video_button"]')
             if await post.count() == 0:
@@ -81,6 +133,10 @@ async def upload(video: Path, caption: str, job_id: str) -> dict:
                     raise LaneError("timed out waiting for TikTok to finish processing the video")
                 await asyncio.sleep(3)
 
+            # last look before posting: caption still there, visibility still right
+            await _ensure_caption(page, editor, caption)
+            if VISIBILITY:
+                await _set_visibility(page, VISIBILITY)
             await btn.click()
             # Optional "Continue to post?" / content-check dialog.
             await try_click(page, page.get_by_role("button", name=re.compile(r"Post now", re.I)), 5000)
