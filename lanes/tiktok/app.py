@@ -14,7 +14,7 @@ from lanes.common.lane import DEBUG_DIR, LaneError, create_app
 
 UPLOAD_URL = "https://www.tiktok.com/tiktokstudio/upload?from=upload"
 PROCESS_TIMEOUT = int(os.environ.get("PROCESS_TIMEOUT", "900"))  # seconds for upload+processing
-VISIBILITY = os.environ.get("TIKTOK_VISIBILITY", "")  # "", "Everyone", "Friends", "Only you"
+VISIBILITY = os.environ.get("TIKTOK_VISIBILITY", "")  # "", "Everyone", "Friends", "Only me"  (TikTok renamed "Only you" -> "Only me")
 
 
 async def _logged_in(page) -> bool:
