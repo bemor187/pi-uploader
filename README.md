@@ -80,6 +80,9 @@ The lane then runs a real browser inside a virtual display (xvfb).
    Step through one post by hand, running this on each screen:
    `cd /opt/uploader && ./venv/bin/python -m lanes.clapper.dump_ui`
    Then edit the matches in `/opt/uploader/lanes/clapper/clapper_flow.json` to fit.
+   Notes from calibrating (2026-11-22): Clapper registers no video share handler, so the lane launches the app and the flow goes
+   **+ → Video → Upload → newest video → Next → Next → caption → Post**, matched by resource id. Turn off any other accessibility
+   service on the phone (auto-clickers etc.). They make `uiautomator dump` fail with "null root node", and the lane can't see the screen.
 6. Optional: install [ADBKeyBoard](https://github.com/senzhk/ADBKeyBoard) and set it as the default keyboard so captions keep emoji.
    Without it, non-ASCII characters are dropped.
 
