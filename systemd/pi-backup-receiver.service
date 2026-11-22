@@ -1,0 +1,12 @@
+[Unit]
+Description=Receive Pi stack backups sent with Taildrop and file them by host
+After=tailscaled.service
+Requires=tailscaled.service
+
+[Service]
+ExecStart=/opt/uploader/scripts/backup-receiver.sh
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

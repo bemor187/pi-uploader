@@ -165,10 +165,63 @@ It turns off password SSH and closes port 22 on the LAN, so the only way in is T
 If you'd rather use regular keys, put one in `~/.ssh/authorized_keys` and run it without `--tailscale`.
 setup.sh adds 2 GB of swap on the browser lanes when the OS uses dphys-swapfile. Newer Pi OS uses zram instead.
 
+## Check, update, recover
+
+**Check everything** (from any Pi, or from your phone's SSH app):
+```bash
+~/pi-uploader/scripts/check.sh          # every Pi's health + the latest backup from each
+sudo ~/pi-uploader/scripts/check.sh --deep   # also: are TikTok/Instagram still logged in, is the Pixel connected
+```
+It exits non-zero and prints FAIL lines when something's wrong. overseer also checks all of this every minute,
+and sends an ntfy alert when a Pi goes down or a Pi's backup is more than 36 hours old.
+
+**Update** (on each Pi, after changes are merged to `main`):
+```bash
+sudo ~/pi-uploader/scripts/update.sh
+```
+This pulls the code, installs any new Python dependencies, restarts the services, refreshes the backup timer, then runs `check.sh`.
+It keeps `/etc/uploader.env`, browser logins and the Clapper calibration. Re-running the bootstrap line also works.
+That path additionally upgrades the OS packages.
+
+**Backups** run on their own: each Pi runs `pi-backup.timer` nightly around 03:30 and keeps its last 7 in `/var/backups/pi-stack/`.
+It sends a copy to **overseer** with Taildrop. overseer files them under `/var/backups/pi-stack/<host>/` and keeps 14 per host.
+overseer's own backups go to **brain**. Run one now with `sudo ~/pi-uploader/scripts/backup.sh`.
+
+| Pi | What's backed up |
+|---|---|
+| all | `/etc/uploader.env` (tokens and settings) |
+| brain | job queue database |
+| tiktok, insta | browser profile, i.e. the platform login (caches skipped) |
+| clapper | calibrated `clapper_flow.json`, the ADB key the Pixel trusts |
+| web | everything in `/srv/web` |
+| overseer | its database, the Ollama service settings |
+
+Taildrop must be allowed in the Tailscale admin console (it's on by default for personal tailnets), and all the Pis must be logged in as you.
+
+**Recover a Pi** (dead SD card, corruption, or swapping hardware):
+1. In the Tailscale admin console, **delete the old machine**. Otherwise the new one joins as `<host>-1`.
+2. Flash Raspberry Pi OS Lite 64-bit with Raspberry Pi Imager: **same hostname**, user `bemor`, SSH on.
+3. Run that Pi's bootstrap line (section 1). Any token it prints doesn't matter, because the restore puts the old ones back.
+4. Fetch its backup from overseer (for overseer itself, use brain):
+   ```bash
+   # on overseer:
+   ls /var/backups/pi-stack/<host>/
+   sudo tailscale file cp /var/backups/pi-stack/<host>/<newest>.tgz <host>:
+   # on the new Pi:
+   sudo tailscale file get ~/
+   sudo ~/pi-uploader/scripts/restore.sh ~/<host>-*.tgz
+   ```
+5. Run `~/pi-uploader/scripts/check.sh`. On clapper, accept the USB-debugging prompt on the Pixel if it asks again.
+   If TikTok or Instagram show `logged_in: false`, log in again through `/login` (section 2).
+
+If brain is restored, everything queued up to its last backup comes back. Jobs that were running are marked failed, so you can check them and use `/retry`.
+
 ## Operations
 
 ```bash
 sudo systemctl status uploader-brain            # or uploader-lane@tiktok, overseer, nginx (web)
+systemctl list-timers pi-backup                  # when the next backup runs
+journalctl -u pi-backup -n 20                    # last backup's output
 journalctl -u uploader-lane@insta -f             # live logs
 ls ~/uploader-work/debug/                         # failure screenshots (browser + phone)
 sudo nano /etc/uploader.env && sudo systemctl restart <unit>
