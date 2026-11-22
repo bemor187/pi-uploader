@@ -90,7 +90,11 @@ async def upload(video: Path, caption: str, job_id: str) -> dict:
 async def check() -> dict:
     async with browser_page("tiktok") as page:
         await page.goto(UPLOAD_URL, wait_until="domcontentloaded")
-        await asyncio.sleep(8)
+        # Studio's upload area can take well over 8s to render on a Pi; wait like upload() does.
+        try:
+            await page.locator('input[type="file"]').first.wait_for(state="attached", timeout=45_000)
+        except Exception:
+            await asyncio.sleep(2)
         shot = DEBUG_DIR / "tiktok-check.png"
         await page.screenshot(path=str(shot))
         return {"logged_in": await _logged_in(page), "url": page.url, "screenshot": str(shot)}
