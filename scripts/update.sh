@@ -19,12 +19,4 @@ if [[ -L /etc/nginx/sites-enabled/web ]]; then
   cp /opt/uploader/web/nginx-web.conf /etc/nginx/sites-available/web
   nginx -t && systemctl reload nginx && echo "reloaded nginx (web)"
 fi
-# postiz: refresh compose + nginx files and apply them (keeps /opt/postiz/.env and postiz.env;
-# doesn't pull new images: cd /opt/postiz && sudo docker compose pull && sudo docker compose up -d)
-if [[ -d /opt/postiz ]] && systemctl is-enabled postiz >/dev/null 2>&1; then
-  rsync -a /opt/uploader/postiz/docker-compose.yml /opt/uploader/postiz/dynamicconfig /opt/postiz/
-  cp /opt/uploader/postiz/nginx-postiz.conf /etc/nginx/sites-available/postiz
-  nginx -t && systemctl reload nginx
-  (cd /opt/postiz && docker compose up -d --remove-orphans) && echo "applied postiz compose"
-fi
 echo "updated to $(git -C "$SRC" log --oneline -1)"

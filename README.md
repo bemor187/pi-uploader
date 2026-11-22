@@ -1,10 +1,9 @@
 # Pi Uploader Cluster
 
-A seven-Pi stack. At its core is a headless upload system for TikTok, Instagram and Clapper:
+A six-Pi stack (plus one spare Pi 4). At its core is a headless upload system for TikTok, Instagram and Clapper:
 Grokbot / Claude Code POST a video to **brain**, which queues it and hands it to the right lane.
 Once brain accepts the job, nothing else needs to stay on. Around it sit a static web host
-(**web**), a self-hosted social scheduler (**postiz**) and an always-on AI tasker that watches
-everything (**overseer**). Setup, logins and day-to-day running are all done from a phone.
+(**web**) and an always-on AI tasker that watches everything (**overseer**). Setup, logins and day-to-day running are all done from a phone.
 
 | Host | Model | Role | Service | Port |
 |---|---|---|---|---|
@@ -13,7 +12,6 @@ everything (**overseer**). Setup, logins and day-to-day running are all done fro
 | insta | Pi 4 4GB | Playwright Chromium → instagram.com Reels | `uploader-lane@insta` | 8100 |
 | clapper | Pi 4 4GB | ADB → Clapper app on Pixel 3a | `uploader-lane@clapper` | 8100 |
 | web | Pi 4 4GB | nginx static host: HTML games + files | `nginx` | 80 |
-| postiz | Pi 4 4GB | Postiz self-hosted social scheduler (Docker) | `postiz` (compose), `nginx` | 80 (nginx) → 4007 |
 | overseer | Pi 4 4GB | AI tasker (Ollama router) + cluster monitor/alerts | `overseer`, `ollama` | 8200 (11434 localhost only) |
 
 Every Pi runs Raspberry Pi OS Lite 64-bit, and each one's Tailscale hostname is its role name.
@@ -41,12 +39,12 @@ Give the lanes the same LANE_TOKEN:
 curl -fsSL https://raw.githubusercontent.com/bemor187/pi-uploader/main/scripts/bootstrap.sh | sudo LANE_TOKEN=<from brain> bash -s tiktok
 ```
 
-Do the same for `insta` and `clapper`. `web` and `postiz` need no token (`... | sudo bash -s web`),
+Do the same for `insta` and `clapper`. `web` needs no token (`... | sudo bash -s web`),
 and overseer takes brain's API_TOKEN (section 4b). To update later, re-run the same line; it pulls the latest code and keeps your config.
 Health check from the phone's browser (Tailscale on): `http://brain/health`.
 
 Turn on MagicDNS in the Tailscale admin console so `brain`, `tiktok` and the other hostnames resolve.
-Disable key expiry for all seven Pis there too.
+Disable key expiry for all the Pis there too.
 
 ## 2. Log the browser lanes in, from your phone
 
@@ -137,7 +135,7 @@ and run `sudo systemctl restart overseer`. MSI and MacBook need `OLLAMA_HOST=0.0
 - `POST http://overseer:8200/task` with `Authorization: Bearer $TASK_TOKEN` and `{"prompt": "..."}`. Tasks go to MSI first, then the MacBook, then the local model.
   Add `"agent": "msi"` (and optionally `"model"`) to pin a task to one agent.
 - `http://overseer:8200/` shows the status page. `/health` returns JSON. `/digest?token=$TASK_TOKEN` gives a plain-English summary from the local model.
-- Every 60s it checks each Ollama agent, brain, the three lanes, and the hosts in `SITES` (web and postiz by default). It sends an ntfy alert when one goes down (2 failed checks in a row) or comes back up, and for each newly failed upload.
+- Every 60s it checks each Ollama agent, brain, the three lanes, and the hosts in `SITES` (web by default). It sends an ntfy alert when one goes down (2 failed checks in a row) or comes back up, and for each newly failed upload.
 - Auto-retry happens **once per job**, and only when brain says `lane unreachable:`. That means the lane never got the video, so it can't have been posted. Any other failure is alert-only.
 
 ## 4c. web (static games + files)
@@ -160,30 +158,6 @@ Games get `Cross-Origin-Opener/Embedder-Policy` headers, so threaded Godot/Unity
 To share games publicly, enable HTTPS + Funnel for `web` in the Tailscale admin console and re-run with `FUNNEL=1`.
 The address becomes `https://web.<tailnet>.ts.net/`, and everything on the Pi is then public, files included.
 
-## 4d. postiz (social scheduler)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/bemor187/pi-uploader/main/scripts/bootstrap.sh | sudo bash -s postiz
-```
-
-This installs Docker and runs the official Postiz stack from `postiz/docker-compose.yml`: Postiz, Postgres, Redis, and Temporal with its Postgres and Elasticsearch.
-It lives in `/opt/postiz` under the `postiz` systemd unit. Postiz listens only on `127.0.0.1:4007`.
-nginx on port 80 is the way in, because Docker-published ports would skip ufw. Secrets are generated once into `/opt/postiz/.env`.
-
-1. The first boot takes several minutes on a Pi 4. Check progress with `sudo docker compose -f /opt/postiz/docker-compose.yml ps`.
-2. Open `http://postiz/` and create your account. Then set `DISABLE_REGISTRATION=true` in `/opt/postiz/.env` and run `cd /opt/postiz && sudo docker compose up -d`.
-3. Put social app keys (`TIKTOK_CLIENT_ID`, `FACEBOOK_APP_ID`, `YOUTUBE_CLIENT_ID`, ...) in `/opt/postiz/postiz.env`, then run `docker compose up -d` again.
-   Most providers insist on an HTTPS callback URL. Enable HTTPS certificates in the Tailscale admin console, then re-run setup with `POSTIZ_HTTPS=1`.
-   Postiz then lives at `https://postiz.<tailnet>.ts.net` (still tailnet only), and callbacks look like `https://postiz.<tailnet>.ts.net/integrations/social/tiktok`.
-4. To upgrade: `cd /opt/postiz && sudo docker compose pull && sudo docker compose up -d`. To pin a version, set `POSTIZ_TAG` in `.env`.
-5. The Temporal UI runs on the Pi's localhost only: `ssh -L 8080:localhost:8080 bemor@postiz`, then open `http://localhost:8080`.
-
-**Postiz and brain are separate.** Postiz posts through each platform's official API, while the lanes drive the web or app UI.
-If an account is connected in both, a video sent to both gets posted twice. Use one route per account,
-for example Postiz for YouTube/X/Threads, and brain for TikTok/Instagram/Clapper.
-
-Memory: the stack uses roughly 2.5–3 GB, so setup adds swap. Keep this Pi doing only this job.
-
 ## 5. Hardening (Phase 4)
 
 Once Tailscale SSH works from your phone, run `sudo ~/pi-uploader/scripts/harden-ssh.sh --tailscale` on each Pi.
@@ -194,15 +168,13 @@ setup.sh adds 2 GB of swap on the browser lanes when the OS uses dphys-swapfile.
 ## Operations
 
 ```bash
-sudo systemctl status uploader-brain            # or uploader-lane@tiktok, overseer, nginx (web), postiz
-sudo docker compose -f /opt/postiz/docker-compose.yml ps     # postiz containers
-sudo docker logs -f postiz                                    # postiz app logs
+sudo systemctl status uploader-brain            # or uploader-lane@tiktok, overseer, nginx (web)
 journalctl -u uploader-lane@insta -f             # live logs
 ls ~/uploader-work/debug/                         # failure screenshots (browser + phone)
 sudo nano /etc/uploader.env && sudo systemctl restart <unit>
 ```
 Updating code: `git -C ~/pi-uploader pull && sudo ~/pi-uploader/scripts/update.sh` pulls the code and restarts the services.
-On web it reloads nginx, and on postiz it re-applies the compose file without pulling new images. It doesn't upgrade system packages, and it keeps `/etc/uploader.env` and the Pi's Clapper steps. Re-running the bootstrap line also works, and it does a full upgrade.
+On web it reloads nginx. It doesn't upgrade system packages, and it keeps `/etc/uploader.env` and the Pi's Clapper steps. Re-running the bootstrap line also works, and it does a full upgrade.
 
 ## Known limits
 - TikTok and Instagram change their web UIs. When a step breaks, the failure screenshot shows which one.

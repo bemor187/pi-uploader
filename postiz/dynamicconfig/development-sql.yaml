@@ -1,6 +1,0 @@
-limit.maxIDLength:
-  - value: 255
-    constraints: {}
-system.forceSearchAttributesCacheRefreshOnRead:
-  - value: true # from upstream postiz-docker-compose (single-node setup)
-    constraints: {}
