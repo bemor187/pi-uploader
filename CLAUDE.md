@@ -1,0 +1,1 @@
+Read HANDOFF.md first and follow its loop: run `./scripts/goals.sh`, fix the first failing goal, verify it, update HANDOFF.md, commit, and repeat. Do the work yourself over `ssh bemor@<host>` and stop only for steps marked HUMAN.
