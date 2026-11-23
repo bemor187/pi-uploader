@@ -18,6 +18,9 @@ The panel accepts commands, but every screen refresh hangs: BUSY goes high and n
 | 20:43–20:52 | Another session worked on overseer (made `/opt/uploader` a git clone; the driver dir vanished). |
 | 21:13 onward | Every refresh hangs on BUSY, including with the **stock** Waveshare driver calls (init, Clear, sleep). |
 | 21:38 | overseer rebooted (probably an abrupt power-off). Still hangs afterwards. |
+| 22:28 | Still hangs (V4, V3 and V2 drivers all time out on `Clear`). |
+| 22:36 | User reseated the ribbon and confirmed the panel is the B/W **V4** (foil "V4" marking, no red). overseer went offline during a test and booted again at 22:36:51 (timing may be coincidence). |
+| 22:39 | Re-test with power logging: `init` OK, `Clear` still hangs; `throttled=0x0` throughout, no crash. The panel or HAT is faulty unless the HAT's switches (if any) or pin seating are wrong. |
 
 ## Tests done (all on overseer)
 - **No conflicts:** nothing else holds `/dev/gpiochip0` or `/dev/spidev0.0`; `config.txt` is clean (`dtparam=spi=on`, no conflicting overlays); no other unit or cron touches the display.
