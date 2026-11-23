@@ -140,6 +140,12 @@ and run `sudo systemctl restart overseer`. MSI and MacBook need `OLLAMA_HOST=0.0
 - `http://overseer:8200/` shows the status page. `/health` returns JSON. `/digest?token=$TASK_TOKEN` gives a plain-English summary from the local model.
 - Every 60s it checks each Ollama agent, brain, the three lanes, and the hosts in `SITES` (web by default). It sends an ntfy alert when one goes down (2 failed checks in a row) or comes back up, and for each newly failed upload.
 - Auto-retry happens **once per job**, and only when brain says `lane unreachable:`. That means the lane never got the video, so it can't have been posted. Any other failure is alert-only.
+- **Fleet over SSH** (`overseer/fleet.py`). overseer runs as `bemor` and logs into every Pi with Tailscale SSH (no keys; it relies on the tailnet SSH policy allowing it, and on passwordless sudo).
+  Every 5 min it checks `ssh:<host>` (is the Pi alive at all, as opposed to just its service) and `os:<host>` (disk, memory, temperature, under-voltage/throttling, failed or inactive role units).
+  Every 6 h it calls each lane's `/check` as `login:<lane>`: TikTok/Instagram logged in, and clapper's Pixel attached with Clapper installed. It reads `LANE_TOKEN` from brain.
+  Each of these alerts like the other checks. `AUTO_RESTART=1` lets it restart a role's units when that role's health is down but its Pi still answers SSH. This is off by default because a restart mid-post can leave a half-made post.
+- `GET /fleet` (TASK_TOKEN) returns every Pi's latest OS snapshot. `POST /fleet/<host>/<action>` runs one fixed action: `status`, `logs` (`?lines=`), `check`, `restart` (that Pi's role units), `update` (`update.sh`), `reboot`.
+  There is no free-form command. `restart`, `update` and `reboot` are refused on overseer itself.
 
 ## 4c. web (static games + files)
 

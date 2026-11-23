@@ -5,6 +5,8 @@ POST /task      {"prompt": "...", "system"?: "...", "agent"?: "msi", "model"?: "
 GET  /tasks     recent tasks
 GET  /digest    plain-English cluster summary written by the local model
 GET  /health    overseer ok + latest monitor snapshot (no auth)
+GET  /fleet     per-Pi OS snapshot over SSH (disk, mem, temp, power, units)   [see fleet.py]
+POST /fleet/{host}/{action}   allowlisted: status logs check restart update reboot
 GET  /          phone-friendly status page (no auth, read-only)
 
 Monitor (every MONITOR_INTERVAL s): every agent's Ollama, brain, each lane, and the other
@@ -14,7 +16,11 @@ Auto-retry: a failed job is retried via brain /retry at most ONCE, and only when
 detail starts with "lane unreachable:" -- brain sets that only on connect errors, i.e. the
 lane never received the video, so it cannot have been posted.
 
-Auth for /task, /tasks, /digest: "Authorization: Bearer $TASK_TOKEN" or ?token=$TASK_TOKEN.
+Fleet (fleet.py, every FLEET_INTERVAL s): SSH into every Pi for OS checks (ssh:<host>, os:<host>)
+and every LOGIN_CHECK_H hours call each lane's /check (login:<lane>). AUTO_RESTART=1 restarts a
+role whose health is down while its Pi still answers SSH (off by default).
+
+Auth for /task, /tasks, /digest, /fleet: "Authorization: Bearer $TASK_TOKEN" or ?token=$TASK_TOKEN.
 """
 import asyncio
 import html
@@ -31,6 +37,8 @@ import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+
+from overseer import fleet
 
 log = logging.getLogger("overseer")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -159,7 +167,8 @@ async def probe(c: httpx.AsyncClient, url: str, headers: Optional[dict] = None):
         return False, f"unreachable: {type(e).__name__}", None
 
 
-async def record(name: str, ok: bool, detail: str, extra: Optional[dict] = None):
+async def record(name: str, ok: bool, detail: str, extra: Optional[dict] = None,
+                 down_after: int = DOWN_AFTER):
     now = time.time()
     s = STATE.setdefault(name, {"ok": None, "fails": 0, "since": now})
     s.update(checked=now, detail=detail, **(extra or {}))
@@ -172,7 +181,7 @@ async def record(name: str, ok: bool, detail: str, extra: Optional[dict] = None)
         s["ok"] = True
     else:
         s["fails"] += 1
-        if s["fails"] >= DOWN_AFTER and s["ok"] is not False:
+        if s["fails"] >= down_after and s["ok"] is not False:
             s["ok"], s["since"] = False, now
             await alert(f"DOWN: {name}", f"{name} is down: {detail}", "high", "rotating_light")
 
@@ -337,9 +346,13 @@ def auth(authorization: str = Header(default=""), token: str = ""):
 async def lifespan(app: FastAPI):
     init_db()
     log.info("agents (priority order): %s", [a["name"] for a in AGENTS])
-    t = asyncio.create_task(monitor_loop())
+    fleet.init(record, alert, add_event, STATE, LANES)
+    log.info("fleet (ssh as %s): %s; auto-restart %s", fleet.PI_USER, list(fleet.FLEET),
+             "on" if fleet.AUTO_RESTART else "off")
+    tasks_ = [asyncio.create_task(monitor_loop()), asyncio.create_task(fleet.fleet_loop())]
     yield
-    t.cancel()
+    for t in tasks_:
+        t.cancel()
 
 
 app = FastAPI(title="overseer", lifespan=lifespan)
@@ -392,6 +405,19 @@ async def tasks(limit: int = 20):
 def snapshot() -> dict:
     return {k: {kk: v.get(kk) for kk in ("ok", "detail", "since", "checked", "models")}
             for k, v in sorted(STATE.items())}
+
+
+@app.get("/fleet", dependencies=[Depends(auth)])
+async def fleet_status():
+    return fleet.snapshot()
+
+
+@app.post("/fleet/{host}/{action}", dependencies=[Depends(auth)])
+async def fleet_action(host: str, action: str, lines: int = 200):
+    try:
+        return await fleet.do_action(host, action, lines)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 @app.get("/backups")
