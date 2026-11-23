@@ -25,13 +25,14 @@ fi
 usermod -aG spi,gpio "$U"
 
 echo "== driver $DRIVER"
-V="$APP/overseer/vendor/waveshare_epd"
+# outside /opt/uploader so a git clean or redeploy can't delete it
+V=/usr/local/lib/epaper/waveshare_epd
 mkdir -p "$V"
 RAW=https://raw.githubusercontent.com/waveshareteam/e-Paper/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd
 curl -fsSL "$RAW/epdconfig.py" -o "$V/epdconfig.py"
 curl -fsSL "$RAW/$DRIVER.py" -o "$V/$DRIVER.py"
 [[ -f "$V/__init__.py" ]] || touch "$V/__init__.py"
-chown -R "$U:$U" "$APP/overseer/vendor"
+chmod -R a+rX /usr/local/lib/epaper
 
 echo "== service"
 sed "s/__USER__/$U/" "$APP/systemd/overseer-epaper.service" > /etc/systemd/system/overseer-epaper.service

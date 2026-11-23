@@ -15,8 +15,8 @@ clock moves. A full refresh every time keeps it ghost-free, and at this rate wea
 
 Env: EPD_DRIVER (default epd2in13_V4; the version is printed on the display's sticker:
 epd2in13_V2, epd2in13_V3, epd2in13_V4, epd2in13b_V4 ...), EPAPER_URL, EPAPER_REFRESH,
-EPAPER_ROTATE (0 or 180, if mounted upside down). Driver files live in ./vendor/waveshare_epd
-(scripts/setup-epaper.sh fetches them).
+EPAPER_ROTATE (0 or 180, if mounted upside down). Driver files live in
+/usr/local/lib/epaper/waveshare_epd (EPD_LIB; scripts/setup-epaper.sh fetches them).
 """
 import json
 import logging
@@ -173,9 +173,14 @@ def wrap(d: ImageDraw.ImageDraw, text: str, width: int, f) -> list:
 
 class Display:
     def __init__(self):
-        sys.path.insert(0, str(Path(__file__).resolve().parent / "vendor"))
+        # outside the code tree, so a git clean / redeploy of /opt/uploader can't delete it
+        for d in (os.environ.get("EPD_LIB", "/usr/local/lib/epaper"), Path(__file__).resolve().parent / "vendor"):
+            sys.path.insert(0, str(d))
         mod = __import__(f"waveshare_epd.{DRIVER}", fromlist=["EPD"])
+        from waveshare_epd import epdconfig
+        self.cfg = epdconfig
         self.epd = mod.EPD()
+        self.powered = False
         self.color = "b" in DRIVER.replace("epd2in13", "")[:2]  # epd2in13b_*: black + red planes
 
     def show(self, img: Image.Image):
@@ -184,19 +189,32 @@ class Display:
         e = self.epd
 
         def stuck(*_):  # the driver waits on BUSY forever; exit so systemd restarts us
-            log.error("display update stuck for 60s (BUSY never released); exiting")
+            log.error("display update stuck for 30s (BUSY never released); exiting")
             os._exit(1)
 
         signal.signal(signal.SIGALRM, stuck)
-        signal.alarm(60)
+        signal.alarm(30)
         try:
+            # The stock driver switches the HAT's 5V on and resets the panel 20 ms later, then
+            # cuts the 5V after every refresh; the panel isn't always ready that fast and BUSY
+            # sticks high. So: power on once with a settle delay, and between refreshes use the
+            # panel's own deep sleep (uA) with the 5V left on; init()'s reset wakes it.
+            if not self.powered:
+                self.cfg.GPIO_PWR_PIN.on()
+                time.sleep(1.0)
+                self.powered = True
+            try:
+                self.cfg.SPI.close()  # init() re-opens it; avoid leaking an fd per refresh
+            except Exception:
+                pass
             e.init()
             buf = e.getbuffer(img)
             if self.color:
                 e.display(buf, e.getbuffer(Image.new("1", img.size, 255)))
             else:
                 e.display(buf)
-            e.sleep()  # low power + protects the panel between refreshes
+            e.send_command(0x10)  # deep sleep (keeps 5V on, unlike e.sleep())
+            e.send_data(0x01)
         finally:
             signal.alarm(0)
 
