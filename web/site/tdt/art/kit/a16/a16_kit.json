@@ -1,0 +1,93 @@
+{
+ "version": "a16",
+ "px_per_wu": null,
+ "note": "weather tiles are SCREEN px (1 tile px = 1 CSS px); FX sprites are world-space, sizes in wu below",
+ "weather": {
+  "wx_drizzle": {
+   "tile": 256,
+   "factor": 1.1,
+   "fall_px_s": [
+    70,
+    300
+   ],
+   "alpha": 0.55
+  },
+  "wx_fog": {
+   "tile": 512,
+   "factor": 0.6,
+   "drift_px_s": [
+    9,
+    3
+   ],
+   "alpha": 1.0,
+   "scale": 1.5
+  },
+  "wx_sparkle": {
+   "tile": 256,
+   "factor": 0.3,
+   "alpha": "0.5 + 0.25 sin(t*1.3)"
+  },
+  "lt_vignette": {
+   "stretched_to": "screen",
+   "alpha": 1.0
+  }
+ },
+ "sprites": {
+  "lt_cone": {
+   "wu": [
+    90,
+    45
+   ],
+   "origin": "left-mid",
+   "blend": "screen"
+  },
+  "lt_tail": {
+   "wu": [
+    22,
+    22
+   ],
+   "blend": "lighter"
+  },
+  "fx_skidglow": {
+   "wu": [
+    26,
+    26
+   ],
+   "blend": "lighter"
+  },
+  "fx_tirespark": {
+   "wu": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "fps": 24,
+   "origin": "left-mid",
+   "blend": "lighter"
+  },
+  "fx_padpulse_drift": {
+   "wu": "r 60->260 over 0.6 s",
+   "blend": "screen"
+  },
+  "fx_padpulse_donut": {
+   "wu": "r 60->260 over 0.6 s",
+   "blend": "screen"
+  },
+  "fx_padpulse_burn": {
+   "wu": "r 60->260 over 0.6 s",
+   "blend": "screen"
+  },
+  "fx_smokelight": {
+   "wu": "burnout box +60",
+   "blend": "screen"
+  },
+  "wet_streak": {
+   "wu": [
+    14,
+    70
+   ],
+   "blend": "screen",
+   "baked": "A14 cache"
+  }
+ }
+}

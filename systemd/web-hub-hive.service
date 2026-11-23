@@ -1,0 +1,8 @@
+[Unit]
+Description=web hub: refresh hive-brain feed (/srv/web/hub/hive.json)
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/uploader/scripts/web-hub.sh --hive

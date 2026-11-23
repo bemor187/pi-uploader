@@ -7,7 +7,7 @@
 # Tokens: on brain, leave them unset and the script generates both and prints them.
 # On the lanes, pass the same LANE_TOKEN:  sudo LANE_TOKEN=xxxx ./scripts/setup.sh tiktok
 # On overseer, pass brain's API_TOKEN:      sudo API_TOKEN=xxxx ./scripts/setup.sh overseer
-# web needs no token. Add FUNNEL=1 on brain or web to publish it over public HTTPS.
+# web needs no token (optional dashboard tokens: see scripts/web-hub.sh). Add FUNNEL=1 on brain or web to publish it over public HTTPS.
 set -euo pipefail
 
 ROLE="${1:-}"
@@ -122,8 +122,8 @@ case "$ROLE" in
     step "web: nginx static host (HTML games + files)"
     apt-get install -y nginx
     mkdir -p /srv/web/games /srv/web/files
-    [[ -f /srv/web/index.html ]] || cp "$APP/web/site/index.html" /srv/web/index.html
-    chown -R "$RUN_USER:$RUN_USER" /srv/web
+    # PI//GRID hub (landing, /dash/, /queue/, /tdt/) + nginx token includes + hive feed; idempotent
+    RUN_USER="$RUN_USER" "$APP/scripts/web-hub.sh"
     grep -q 'application/wasm' /etc/nginx/mime.types || \
       sed -i 's|^}|    application/wasm                      wasm;\n}|' /etc/nginx/mime.types
     cp "$APP/web/nginx-web.conf" /etc/nginx/sites-available/web
@@ -209,5 +209,6 @@ if [[ $ROLE == web ]]; then
   curl -fsS http://127.0.0.1/health >/dev/null && echo "web /health: OK" || echo "web /health: NOT responding (journalctl -u nginx)"
   echo "Put games in /srv/web/games/<name>/ and files in /srv/web/files/, e.g. from another tailnet machine:"
   echo "  rsync -av mygame/ $RUN_USER@web:/srv/web/games/mygame/"
-  echo "Browse: http://web/"
+  echo "Browse: http://web/  (cluster: /dash/, queue: /queue/, game: /tdt/)"
+  echo "Dashboard tokens (optional) go in $ENVF on web: API_TOKEN=<brain's>, TASK_TOKEN=<overseer's>, HIVE_TOKEN=<read-only GitHub token>; then: sudo ~/pi-uploader/scripts/update.sh"
 fi

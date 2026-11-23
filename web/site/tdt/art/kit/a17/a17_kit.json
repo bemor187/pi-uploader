@@ -1,0 +1,1028 @@
+{
+ "version": "a17d",
+ "px_per_wu_2x": 4,
+ "px_per_wu_1x": 2,
+ "lean": [
+  -0.35,
+  -0.65
+ ],
+ "wall_h": {
+  "low": 14,
+  "medium": 22,
+  "tall": 34
+ },
+ "draw": "drawImage(img, lot.x - anchor_wu[0], lot.y - anchor_wu[1], wu[0], wu[1])  (lot.x/y = d30 landmarks[] top-left)",
+ "landmarks": {
+  "lm_capitol_records": {
+   "file": "lm_capitol_records",
+   "px_2x": [
+    592,
+    500
+   ],
+   "wu": [
+    148,
+    125
+   ],
+   "lot_wu": [
+    124,
+    90
+   ],
+   "anchor_wu": [
+    15,
+    26
+   ],
+   "wall_h": 34,
+   "roof_offset_wu": [
+    -11.9,
+    -22.1
+   ],
+   "d30_name": "Capitol Records Building",
+   "osm_way": 422141102,
+   "mode": "lot",
+   "beacon_wu": [
+    46.1,
+    7.3
+   ]
+  },
+  "lm_chinese_theatre": {
+   "file": "lm_chinese_theatre",
+   "px_2x": [
+    684,
+    564
+   ],
+   "wu": [
+    171,
+    141
+   ],
+   "lot_wu": [
+    151,
+    114
+   ],
+   "anchor_wu": [
+    11,
+    18
+   ],
+   "wall_h": 22,
+   "roof_offset_wu": [
+    -7.7,
+    -14.3
+   ],
+   "d30_name": "TCL Chinese Theatre",
+   "osm_way": 424105908,
+   "mode": "lot"
+  },
+  "lm_dolby": {
+   "file": "lm_dolby",
+   "px_2x": [
+    1000,
+    468
+   ],
+   "wu": [
+    250,
+    117
+   ],
+   "lot_wu": [
+    230,
+    90
+   ],
+   "anchor_wu": [
+    11,
+    18
+   ],
+   "wall_h": 22,
+   "roof_offset_wu": [
+    -7.7,
+    -14.3
+   ],
+   "d30_name": "Dolby Theatre",
+   "osm_way": 151485233,
+   "mode": "lot"
+  },
+  "lm_el_capitan": {
+   "file": "lm_el_capitan",
+   "px_2x": [
+    608,
+    468
+   ],
+   "wu": [
+    152,
+    117
+   ],
+   "lot_wu": [
+    132,
+    90
+   ],
+   "anchor_wu": [
+    11,
+    18
+   ],
+   "wall_h": 22,
+   "roof_offset_wu": [
+    -7.7,
+    -14.3
+   ],
+   "d30_name": "El Capitan Theatre",
+   "osm_way": 424024148,
+   "mode": "lot"
+  },
+  "lm_egyptian": {
+   "file": "lm_egyptian",
+   "px_2x": [
+    656,
+    524
+   ],
+   "wu": [
+    164,
+    131
+   ],
+   "lot_wu": [
+    144,
+    104
+   ],
+   "anchor_wu": [
+    11,
+    18
+   ],
+   "wall_h": 22,
+   "roof_offset_wu": [
+    -7.7,
+    -14.3
+   ],
+   "d30_name": "Egyptian Theater",
+   "osm_way": 423448310,
+   "mode": "lot"
+  },
+  "lm_fox_theatre": {
+   "file": "lm_fox_theatre",
+   "px_2x": [
+    440,
+    468
+   ],
+   "wu": [
+    110,
+    117
+   ],
+   "lot_wu": [
+    90,
+    90
+   ],
+   "anchor_wu": [
+    11,
+    18
+   ],
+   "wall_h": 22,
+   "roof_offset_wu": [
+    -7.7,
+    -14.3
+   ],
+   "d30_name": "Fox Theatre",
+   "osm_way": 423253890,
+   "mode": "lot"
+  },
+  "lm_warner_pacific": {
+   "file": "lm_warner_pacific",
+   "px_2x": [
+    924,
+    516
+   ],
+   "wu": [
+    231,
+    129
+   ],
+   "lot_wu": [
+    211,
+    102
+   ],
+   "anchor_wu": [
+    11,
+    18
+   ],
+   "wall_h": 22,
+   "roof_offset_wu": [
+    -7.7,
+    -14.3
+   ],
+   "d30_name": "Warner Pacific Theatre Building",
+   "osm_way": 423021367,
+   "mode": "lot"
+  },
+  "lm_cvs_lot": {
+   "file": "lm_cvs_lot",
+   "px_2x": [
+    588,
+    448
+   ],
+   "wu": [
+    147,
+    112
+   ],
+   "lot_wu": [
+    130,
+    90
+   ],
+   "anchor_wu": [
+    8,
+    13
+   ],
+   "wall_h": 14,
+   "roof_offset_wu": [
+    -4.9,
+    -9.1
+   ],
+   "d30_name": "CVS Pharmacy",
+   "osm_way": 423021355,
+   "mode": "lot"
+  },
+  "lm_knickerbocker": {
+   "file": "lm_knickerbocker",
+   "px_2x": [
+    800,
+    500
+   ],
+   "wu": [
+    200,
+    125
+   ],
+   "lot_wu": [
+    176,
+    90
+   ],
+   "anchor_wu": [
+    15,
+    26
+   ],
+   "wall_h": 34,
+   "roof_offset_wu": [
+    -11.9,
+    -22.1
+   ],
+   "d30_name": "Hollywood Knickerbocker Apartments",
+   "osm_way": 423021335,
+   "mode": "lot"
+  },
+  "lm_guaranty": {
+   "file": "lm_guaranty",
+   "px_2x": [
+    456,
+    500
+   ],
+   "wu": [
+    114,
+    125
+   ],
+   "lot_wu": [
+    90,
+    90
+   ],
+   "anchor_wu": [
+    15,
+    26
+   ],
+   "wall_h": 34,
+   "roof_offset_wu": [
+    -11.9,
+    -22.1
+   ],
+   "d30_name": "Guaranty Building",
+   "osm_way": 423021369,
+   "mode": "lot"
+  },
+  "lm_fonda": {
+   "file": "lm_fonda",
+   "px_2x": [
+    448,
+    468
+   ],
+   "wu": [
+    112,
+    117
+   ],
+   "lot_wu": [
+    92,
+    90
+   ],
+   "anchor_wu": [
+    11,
+    18
+   ],
+   "wall_h": 22,
+   "roof_offset_wu": [
+    -7.7,
+    -14.3
+   ],
+   "d30_name": "Henry Fonda Theater",
+   "osm_way": 422145227,
+   "mode": "lot"
+  },
+  "lm_palladium_facade": {
+   "file": "lm_palladium_facade",
+   "px_2x": [
+    988,
+    208
+   ],
+   "wu": [
+    247,
+    52
+   ],
+   "lot_wu": [
+    230,
+    30
+   ],
+   "anchor_wu": [
+    8,
+    13
+   ],
+   "wall_h": 14,
+   "roof_offset_wu": [
+    -4.9,
+    -9.1
+   ],
+   "d30_name": "Hollywood Palladium",
+   "osm_way": 422145235,
+   "mode": "facade"
+  },
+  "lm_film_school": {
+   "file": "lm_film_school",
+   "px_2x": [
+    688,
+    484
+   ],
+   "wu": [
+    172,
+    121
+   ],
+   "lot_wu": [
+    152,
+    94
+   ],
+   "anchor_wu": [
+    11,
+    18
+   ],
+   "wall_h": 22,
+   "roof_offset_wu": [
+    -7.7,
+    -14.3
+   ],
+   "d30_name": "The Los Angeles Film School",
+   "osm_way": 423254047,
+   "mode": "lot"
+  },
+  "lm_cinerama_dome": {
+   "file": "lm_cinerama_dome",
+   "px_2x": [
+    680,
+    448
+   ],
+   "wu": [
+    170,
+    112
+   ],
+   "lot_wu": [
+    153,
+    90
+   ],
+   "anchor_wu": [
+    8,
+    13
+   ],
+   "wall_h": 14,
+   "roof_offset_wu": [
+    -4.9,
+    -9.1
+   ],
+   "d30_name": "Pacific Theatres Cinerama Dome",
+   "osm_way": 423247168,
+   "mode": "lot"
+  },
+  "lm_sunset_vine_tower": {
+   "file": "lm_sunset_vine_tower",
+   "px_2x": [
+    636,
+    500
+   ],
+   "wu": [
+    159,
+    125
+   ],
+   "lot_wu": [
+    135,
+    90
+   ],
+   "anchor_wu": [
+    15,
+    26
+   ],
+   "wall_h": 34,
+   "roof_offset_wu": [
+    -11.9,
+    -22.1
+   ],
+   "d30_name": "Sunset and Vine Tower",
+   "osm_way": 422841860,
+   "mode": "lot"
+  },
+  "lm_hollywood_tower": {
+   "file": "lm_hollywood_tower",
+   "px_2x": [
+    648,
+    500
+   ],
+   "wu": [
+    162,
+    125
+   ],
+   "lot_wu": [
+    138,
+    90
+   ],
+   "anchor_wu": [
+    15,
+    26
+   ],
+   "wall_h": 34,
+   "roof_offset_wu": [
+    -11.9,
+    -22.1
+   ],
+   "d30_name": "Hollywood Tower Apartments",
+   "osm_way": 422140089,
+   "mode": "lot"
+  },
+  "lm_magic_castle": {
+   "file": "lm_magic_castle",
+   "px_2x": [
+    524,
+    468
+   ],
+   "wu": [
+    131,
+    117
+   ],
+   "lot_wu": [
+    111,
+    90
+   ],
+   "anchor_wu": [
+    11,
+    18
+   ],
+   "wall_h": 22,
+   "roof_offset_wu": [
+    -7.7,
+    -14.3
+   ],
+   "d30_name": "Magic Castle",
+   "osm_way": 427527007,
+   "mode": "lot"
+  },
+  "lm_lapd_station": {
+   "file": "lm_lapd_station",
+   "px_2x": [
+    612,
+    448
+   ],
+   "wu": [
+    153,
+    112
+   ],
+   "lot_wu": [
+    136,
+    90
+   ],
+   "anchor_wu": [
+    8,
+    13
+   ],
+   "wall_h": 14,
+   "roof_offset_wu": [
+    -4.9,
+    -9.1
+   ],
+   "d30_name": "Hollywood Community Police Station",
+   "osm_way": 362084318,
+   "mode": "lot"
+  }
+ },
+ "fills": {
+  "bld_hollywood_lowrise": [
+   {
+    "file": "bld_hollywood_lowrise_100x90",
+    "px_2x": [
+     468,
+     448
+    ],
+    "wu": [
+     117,
+     112
+    ],
+    "lot_wu": [
+     100,
+     90
+    ],
+    "anchor_wu": [
+     8,
+     13
+    ],
+    "wall_h": 14,
+    "roof_offset_wu": [
+     -4.9,
+     -9.1
+    ]
+   },
+   {
+    "file": "bld_hollywood_lowrise_140x100",
+    "px_2x": [
+     628,
+     488
+    ],
+    "wu": [
+     157,
+     122
+    ],
+    "lot_wu": [
+     140,
+     100
+    ],
+    "anchor_wu": [
+     8,
+     13
+    ],
+    "wall_h": 14,
+    "roof_offset_wu": [
+     -4.9,
+     -9.1
+    ]
+   },
+   {
+    "file": "bld_hollywood_lowrise_200x110",
+    "px_2x": [
+     868,
+     528
+    ],
+    "wu": [
+     217,
+     132
+    ],
+    "lot_wu": [
+     200,
+     110
+    ],
+    "anchor_wu": [
+     8,
+     13
+    ],
+    "wall_h": 14,
+    "roof_offset_wu": [
+     -4.9,
+     -9.1
+    ]
+   }
+  ],
+  "bld_deco_midrise": [
+   {
+    "file": "bld_deco_midrise_100x90",
+    "px_2x": [
+     480,
+     468
+    ],
+    "wu": [
+     120,
+     117
+    ],
+    "lot_wu": [
+     100,
+     90
+    ],
+    "anchor_wu": [
+     11,
+     18
+    ],
+    "wall_h": 22,
+    "roof_offset_wu": [
+     -7.7,
+     -14.3
+    ]
+   },
+   {
+    "file": "bld_deco_midrise_140x110",
+    "px_2x": [
+     640,
+     548
+    ],
+    "wu": [
+     160,
+     137
+    ],
+    "lot_wu": [
+     140,
+     110
+    ],
+    "anchor_wu": [
+     11,
+     18
+    ],
+    "wall_h": 22,
+    "roof_offset_wu": [
+     -7.7,
+     -14.3
+    ]
+   },
+   {
+    "file": "bld_deco_midrise_200x130",
+    "px_2x": [
+     880,
+     628
+    ],
+    "wu": [
+     220,
+     157
+    ],
+    "lot_wu": [
+     200,
+     130
+    ],
+    "anchor_wu": [
+     11,
+     18
+    ],
+    "wall_h": 22,
+    "roof_offset_wu": [
+     -7.7,
+     -14.3
+    ]
+   }
+  ],
+  "bld_apartment_court": [
+   {
+    "file": "bld_apartment_court_110x100",
+    "px_2x": [
+     520,
+     508
+    ],
+    "wu": [
+     130,
+     127
+    ],
+    "lot_wu": [
+     110,
+     100
+    ],
+    "anchor_wu": [
+     11,
+     18
+    ],
+    "wall_h": 22,
+    "roof_offset_wu": [
+     -7.7,
+     -14.3
+    ]
+   },
+   {
+    "file": "bld_apartment_court_150x120",
+    "px_2x": [
+     680,
+     588
+    ],
+    "wu": [
+     170,
+     147
+    ],
+    "lot_wu": [
+     150,
+     120
+    ],
+    "anchor_wu": [
+     11,
+     18
+    ],
+    "wall_h": 22,
+    "roof_offset_wu": [
+     -7.7,
+     -14.3
+    ]
+   },
+   {
+    "file": "bld_apartment_court_200x140",
+    "px_2x": [
+     880,
+     668
+    ],
+    "wu": [
+     220,
+     167
+    ],
+    "lot_wu": [
+     200,
+     140
+    ],
+    "anchor_wu": [
+     11,
+     18
+    ],
+    "wall_h": 22,
+    "roof_offset_wu": [
+     -7.7,
+     -14.3
+    ]
+   }
+  ],
+  "lot_parking_flat": [
+   {
+    "file": "lot_parking_flat_100x90",
+    "px_2x": [
+     448,
+     408
+    ],
+    "wu": [
+     112,
+     102
+    ],
+    "lot_wu": [
+     100,
+     90
+    ],
+    "anchor_wu": [
+     3,
+     3
+    ],
+    "wall_h": 0,
+    "roof_offset_wu": [
+     -0.0,
+     -0.0
+    ]
+   },
+   {
+    "file": "lot_parking_flat_140x100",
+    "px_2x": [
+     608,
+     448
+    ],
+    "wu": [
+     152,
+     112
+    ],
+    "lot_wu": [
+     140,
+     100
+    ],
+    "anchor_wu": [
+     3,
+     3
+    ],
+    "wall_h": 0,
+    "roof_offset_wu": [
+     -0.0,
+     -0.0
+    ]
+   },
+   {
+    "file": "lot_parking_flat_200x120",
+    "px_2x": [
+     848,
+     528
+    ],
+    "wu": [
+     212,
+     132
+    ],
+    "lot_wu": [
+     200,
+     120
+    ],
+    "anchor_wu": [
+     3,
+     3
+    ],
+    "wall_h": 0,
+    "roof_offset_wu": [
+     -0.0,
+     -0.0
+    ]
+   }
+  ],
+  "bld_studio_shed": [
+   {
+    "file": "bld_studio_shed_110x90",
+    "px_2x": [
+     520,
+     468
+    ],
+    "wu": [
+     130,
+     117
+    ],
+    "lot_wu": [
+     110,
+     90
+    ],
+    "anchor_wu": [
+     11,
+     18
+    ],
+    "wall_h": 22,
+    "roof_offset_wu": [
+     -7.7,
+     -14.3
+    ]
+   },
+   {
+    "file": "bld_studio_shed_160x100",
+    "px_2x": [
+     720,
+     508
+    ],
+    "wu": [
+     180,
+     127
+    ],
+    "lot_wu": [
+     160,
+     100
+    ],
+    "anchor_wu": [
+     11,
+     18
+    ],
+    "wall_h": 22,
+    "roof_offset_wu": [
+     -7.7,
+     -14.3
+    ]
+   },
+   {
+    "file": "bld_studio_shed_220x120",
+    "px_2x": [
+     960,
+     588
+    ],
+    "wu": [
+     240,
+     147
+    ],
+    "lot_wu": [
+     220,
+     120
+    ],
+    "anchor_wu": [
+     11,
+     18
+    ],
+    "wall_h": 22,
+    "roof_offset_wu": [
+     -7.7,
+     -14.3
+    ]
+   }
+  ]
+ },
+ "labels": {
+  "lbl_highland_ave": {
+   "file": "lbl_highland_ave",
+   "street": "Highland Ave",
+   "wu": [
+    163,
+    26
+   ],
+   "px_2x": [
+    652,
+    104
+   ]
+  },
+  "lbl_las_palmas_ave": {
+   "file": "lbl_las_palmas_ave",
+   "street": "Las Palmas Ave",
+   "wu": [
+    182,
+    26
+   ],
+   "px_2x": [
+    728,
+    104
+   ]
+  },
+  "lbl_wilcox_ave": {
+   "file": "lbl_wilcox_ave",
+   "street": "Wilcox Ave",
+   "wu": [
+    138,
+    26
+   ],
+   "px_2x": [
+    552,
+    104
+   ]
+  },
+  "lbl_cahuenga_blvd": {
+   "file": "lbl_cahuenga_blvd",
+   "street": "Cahuenga Blvd",
+   "wu": [
+    181,
+    26
+   ],
+   "px_2x": [
+    724,
+    104
+   ]
+  },
+  "lbl_vine_st": {
+   "file": "lbl_vine_st",
+   "street": "Vine St",
+   "wu": [
+    95,
+    26
+   ],
+   "px_2x": [
+    380,
+    104
+   ]
+  },
+  "lbl_gower_st": {
+   "file": "lbl_gower_st",
+   "street": "Gower St",
+   "wu": [
+    121,
+    26
+   ],
+   "px_2x": [
+    484,
+    104
+   ]
+  },
+  "lbl_franklin_ave": {
+   "file": "lbl_franklin_ave",
+   "street": "Franklin Ave",
+   "wu": [
+    159,
+    26
+   ],
+   "px_2x": [
+    636,
+    104
+   ]
+  },
+  "lbl_yucca_st": {
+   "file": "lbl_yucca_st",
+   "street": "Yucca St",
+   "wu": [
+    114,
+    26
+   ],
+   "px_2x": [
+    456,
+    104
+   ]
+  },
+  "lbl_hollywood_blvd": {
+   "file": "lbl_hollywood_blvd",
+   "street": "Hollywood Blvd",
+   "wu": [
+    196,
+    26
+   ],
+   "px_2x": [
+    784,
+    104
+   ]
+  },
+  "lbl_sunset_blvd": {
+   "file": "lbl_sunset_blvd",
+   "street": "Sunset Blvd",
+   "wu": [
+    150,
+    26
+   ],
+   "px_2x": [
+    600,
+    104
+   ]
+  }
+ },
+ "trim": {
+  "violet": "#A57BFF",
+  "magenta": "#D44DFF",
+  "blue": "#6C8CFF",
+  "warm": "#F4F1EA",
+  "red": "#E8483C",
+  "ember": "#FF7A3A",
+  "win": "#FFBD8C"
+ },
+ "credit": "Shapes stylised from OSM footprints (c) OpenStreetMap contributors, ODbL.",
+ "beacon": {
+  "file": "fx_beacon",
+  "frames_wu": 32,
+  "core_wu": 9.0,
+  "halo_wu": 28,
+  "px_at_068": 6.12,
+  "alpha": [
+   0.55,
+   1.0
+  ],
+  "period_s": 1.2,
+  "rm_alpha": 1.0,
+  "core_blend": "source-over",
+  "halo_blend": "lighter",
+  "color": "#E8483C"
+ },
+ "trim_check": "clean"
+}

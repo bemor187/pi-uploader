@@ -1,0 +1,23 @@
+/* A8 → C40 drop-in (tested in headless Chrome over ?hud=a, 1280x720 + 390x844@2x).
+   Replaces the `.a8-slot.a8-art { background-size:100% 100% }` approach: a plain background stretch squashes the
+   chamfers/radii; border-image keeps corners fixed (9-slice). Slices are @2x image px, widths/outsets are CSS px. */
+body.hud-a .a8-status, body.hud-a .a8-dock, body.hud-a .a8-objective, body.hud-a .a8-bezel,
+body.hud-a .a8-status .pill, body.hud-a .a8-status .heat, body.hud-a .a8-status .bumps,
+body.hud-a .a8-objective .goals li .prog, body.hud-a .a8-status .bumps .pips i {
+  background:none !important; border-style:solid; border-color:transparent !important; box-shadow:none; }
+body.hud-a .a8-bezel     { border-image:url(../art/ui/a8_bezel@2x.png) 48 / 24px stretch; box-shadow:0 0 0 40px #07080D; }
+body.hud-a .a8-status    { border-image:url(../art/ui/a8_statusbar@2x.png) 36 36 24 36 fill / 18px 18px 12px 18px / 0 0 8px 0 stretch; }
+body.hud-a .a8-dock      { border-image:url(../art/ui/a8_dock@2x.png) 8 36 36 36 fill / 4px 18px 18px 18px stretch; }
+body.hud-a .a8-objective { border-image:url(../art/ui/a8_objective_strip@2x.png) 32 32 32 44 fill / 16px 16px 16px 22px / 6px stretch; padding-left:18px; }
+/* Style + REP read as ONE gold chip: Style drops its right column, REP drops its left column */
+body.hud-a .a8-status .pill.gold { border-image:url(../art/ui/a8_style_rep_chip@2x.png) 18 fill / 9px 0 9px 9px / 3px 0 3px 3px stretch; align-self:stretch; }
+body.hud-a .a8-status #repChip   { border-image:url(../art/ui/a8_style_rep_chip@2x.png) 18 fill / 9px 9px 9px 0 / 3px 3px 3px 0 stretch; align-self:stretch; margin-left:-5px; }
+body.hud-a .a8-status .pill.cyan { border-image:url(../art/ui/chip_sm_cyan@2x.png) 18 fill / 9px / 3px stretch; }
+body.hud-a .a8-status .pill.hot  { border-image:url(../art/ui/chip_sm_hot@2x.png) 18 fill / 9px / 3px stretch; }
+body.hud-a .a8-status .pill.clip, body.hud-a .a8-status .heat { border-image:url(../art/ui/chip_sm_curb@2x.png) 18 fill / 9px / 3px stretch; }
+body.hud-a .a8-status .bumps     { border-image:url(../art/ui/a8_health_pips@2x.png) 18 fill / 9px / 3px stretch; }
+body.hud-a .a8-status .bumps .pips i       { border-image:url(../art/ui/pip_sm_full@2x.png) 14 fill / 7px / 3px stretch; }
+body.hud-a .a8-status .bumps .pips i.empty { border-image:url(../art/ui/pip_sm_empty@2x.png) 14 fill / 7px / 3px stretch; }
+body.hud-a .a8-objective .goals li .prog   { border-image:url(../art/ui/counter_sm@2x.png) 14 fill / 7px / 2px stretch; }
+/* A13: C60 Escape clock pill — alley green chip_sm (same 9-slice as other chip_sm) */
+body.hud-a .a8-status .pill.alley, body.hud-a .a8-status .pill.escape { border-image:url(../art/ui/chip_sm_alley@2x.png) 18 fill / 9px / 3px stretch; }

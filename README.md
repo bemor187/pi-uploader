@@ -160,25 +160,45 @@ python3 /opt/uploader/overseer/epaper.py --png /tmp/e.png   # preview without a 
 Set `EPD_DRIVER` in `/etc/uploader.env` to match the version on the display's sticker (default `epd2in13_V4`; also `epd2in13_V2`, `_V3`, `epd2in13b_V4`), then re-run setup.
 `EPAPER_ROTATE=180` flips the image if the display is mounted upside down. It redraws when something changes and at least every 15 min.
 
-## 4c. web (static games + files)
+## 4c. web (PI//GRID hub, games + files)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/bemor187/pi-uploader/main/scripts/bootstrap.sh | sudo bash -s web
+# already set up? just: sudo ~/pi-uploader/scripts/update.sh
 ```
 
-nginx serves `/srv/web` (owned by your Pi user) on port 80, tailnet only:
+nginx serves `/srv/web` (owned by your Pi user) on port 80, tailnet only. `scripts/web-hub.sh` (run by setup and update) deploys the hub:
 
 | Path on the Pi | URL |
 |---|---|
-| `/srv/web/index.html` | `http://web/` (a starter page; setup never overwrites yours) |
+| `/srv/web/index.html` | `http://web/`: cyberpunk hub with live readout + hive-brain panel (replaces the old starter; a hand-made page is kept) |
+| `/srv/web/dash/` | `http://web/dash/`: every Pi up/down, temp, disk, memory, units, lane logins, overseer targets |
+| `/srv/web/queue/` | `http://web/queue/`: brain's jobs, with failures and filters (read-only) |
+| `/srv/web/tdt/` | `http://web/tdt/`: Top Down Takeover playable demo |
 | `/srv/web/games/<name>/index.html` | `http://web/games/<name>/` |
 | `/srv/web/files/` | `http://web/files/` (directory listing) |
 | — | `http://web/health` (for overseer) |
 
+The hub-owned folders (`assets/ dash/ queue/ tdt/ hub/`) are replaced on every deploy; `games/`, `files/` and anything else you add are never touched.
+
+**Dashboard data.** The browser only talks to web. nginx proxies fixed, GET-only paths (`/api/brain/health`, `/api/brain/jobs`, `/api/lane/<lane>/health`, `/api/overseer/health`, `/api/overseer/fleet`) over MagicDNS, so there's no CORS and no token in the browser or the repo.
+Without tokens the hub still works from the `/health` endpoints (overseer's `/health` carries login status and per-host summaries). To unlock more, add any of these to `/etc/uploader.env` **on web**, then `sudo ~/pi-uploader/scripts/update.sh`:
+
+| Line | Unlocks | Where to get it |
+|---|---|---|
+| `API_TOKEN=<brain's>` | upload queue (`/jobs`) | `sudo grep API_TOKEN /etc/uploader.env` on brain |
+| `TASK_TOKEN=<overseer's>` | full fleet metrics (`/fleet`) | `sudo grep TASK_TOKEN /etc/uploader.env` on overseer |
+| `HIVE_TOKEN=<GitHub fine-grained token>` | hive-brain panel (NOW.md active + Needs Brian, projects index), refreshed every 15 min | github.com → Settings → Developer settings → fine-grained token, repo `hive-brain` only, Contents: read-only. Or a read-only deploy key at `/etc/web-hub/hive_deploy_key` |
+| `WEB_TAILNET=<tailnet>.ts.net` | only if auto-detect fails | Tailscale admin → DNS |
+
+web-hub.sh writes them into root-only includes in `/etc/nginx/web-hub/`; the site only ever sees `hub/config.json` (which tokens exist, true/false).
+Funnel requests (`Tailscale-Funnel-Request` header) get 403 on `/api/` and `/hub/`, so turning on Funnel never exposes the queue, fleet or hive panel.
+
 Copy things over from any tailnet machine: `rsync -av mygame/ bemor@web:/srv/web/games/mygame/`.
 Games get `Cross-Origin-Opener/Embedder-Policy` headers, so threaded Godot/Unity web exports work, and `.wasm` is served as `application/wasm`.
+To update the TDT demo, replace `web/site/tdt/demo/index.html` (its `PLAY-THIS.html`) and the `art/` + `audio/` folders it loads (paths are `../art/...` relative to `demo/`).
 To share games publicly, enable HTTPS + Funnel for `web` in the Tailscale admin console and re-run with `FUNNEL=1`.
-The address becomes `https://web.<tailnet>.ts.net/`, and everything on the Pi is then public, files included.
+The address becomes `https://web.<tailnet>.ts.net/`, and the static site is then public, files included (the dashboard APIs stay tailnet-only).
 
 ## 5. Hardening (Phase 4)
 

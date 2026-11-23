@@ -1,19 +1,29 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>web</title>
-<style>
-  body { font: 16px system-ui, sans-serif; margin: 24px; max-width: 640px; }
-  a { display: block; padding: 14px 0; border-bottom: 1px solid #8883; }
-  @media (prefers-color-scheme: dark) { body { background: #111; color: #ddd; } a { color: #8bf; } }
-</style>
-</head>
-<body>
-<h2>web</h2>
-<a href="/games/">Games</a>
-<a href="/files/">Files</a>
-<p><small>Replace /srv/web/index.html to customise this page. setup.sh only writes it when it's missing.</small></p>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="generator" content="pi-web-hub"><link rel="icon" href="data:,">
+<title>PI//GRID · web hub</title><link rel="stylesheet" href="assets/hub.css"></head>
+<body data-page="home">
+<div class="bg-grid"></div><div class="scan"></div>
+<div class="wrap">
+<header class="top"><div class="brand"><b>PI//GRID</b> · tailnet node: web</div>
+<nav><a href="/" class="on">hub</a><a href="/dash/" class="">cluster</a><a href="/queue/" class="">queue</a><a href="/tdt/">play</a><a href="/games/">games</a><a href="/files/">files</a></nav>
+<div class="clock" id="clock"></div></header>
+<section>
+<h1 class="glitch" data-text="PI//GRID">PI//GRID</h1>
+<div class="sub">six pis · one tailnet · <span class="hot">uploads, games, telemetry</span></div>
+<div class="tiles">
+  <a class="panel tile feature" href="/tdt/"><span class="k">// PLAY NOW</span><h3>Top Down Takeover</h3>
+    <p>Urban Takeover single-player demo. 4th &amp; Vine at night, 75 seconds to score, three police bumps and you're done. WASD drive · Space handbrake · Shift boost.</p><span class="go">&gt; launch /tdt/</span></a>
+  <a class="panel tile" href="/dash/"><span class="k">// TELEMETRY</span><h3>Cluster</h3><p>Every Pi's link, temperature, disk, memory, services and lane logins, live from overseer.</p><span class="go">&gt; open dashboard</span></a>
+  <a class="panel tile" href="/queue/"><span class="k">// PIPELINE</span><h3>Upload queue</h3><p>brain's jobs for TikTok, Instagram and Clapper: what's queued, running, done and failed.</p><span class="go">&gt; open queue</span></a>
+  <a class="panel tile" href="/games/"><span class="k">// ARCADE</span><h3>Games</h3><p>Any HTML game dropped into /srv/web/games/.</p><span class="go">&gt; browse</span></a>
+  <a class="panel tile" href="/files/"><span class="k">// DROPBOX</span><h3>Files</h3><p>Shared files on the web Pi.</p><span class="go">&gt; browse</span></a>
+</div>
+</section>
+<h2 class="sec">live readout</h2>
+<div class="panel pad"><div class="strip" id="chips"></div><div class="term" id="term" style="margin-top:12px"></div></div>
+<div id="notes"></div>
+<h2 class="sec">hive brain</h2>
+<div id="hive"><p class="muted">loading…</p></div>
+<footer><span>PI//GRID · served from the web Pi · tailnet only</span><span id="last">sync —</span></footer>
+</div><script src="assets/hub.js"></script></body></html>

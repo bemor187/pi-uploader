@@ -1,0 +1,1363 @@
+{
+ "version": "A8",
+ "units": "px at 1x (CSS px). @2x files are exactly double.",
+ "palette": {
+  "sky": "#10141F",
+  "ground": "#07080D",
+  "curb": "#2A3142",
+  "hot": "#FF2D6A",
+  "cyan": "#3EE0FF",
+  "gold": "#FFD15A",
+  "alley": "#7DFFA8",
+  "ink": "#F4F1EA",
+  "muted": "#9AA3B5",
+  "sodium": "#FFB347"
+ },
+ "font_stack": "'Segoe UI', Inter, system-ui, sans-serif",
+ "glow_pad": "every PNG = panel + glow_pad on all sides. Draw the image at (panel.x-pad, panel.y-pad, panel.w+2pad, panel.h+2pad). Insets are measured from the PNG edge (they include the pad).",
+ "reference_viewport": [
+  1280,
+  720
+ ],
+ "assets": {
+  "objective_strip_cyan": {
+   "kind": "9slice",
+   "panel_1x": [
+    360,
+    40
+   ],
+   "glow_pad_1x": 6,
+   "insets_1x": {
+    "top": 16,
+    "right": 16,
+    "bottom": 16,
+    "left": 22
+   },
+   "use": "objective strip \u2014 current goal = cyan drift circle",
+   "draw": "panel rect expanded by glow_pad on every side; stretch width to text",
+   "anchor": "top-left x=16 y=16 (1280x720); width 360-460 to fit copy",
+   "text": {
+    "objective": {
+     "color": "#F4F1EA",
+     "font": "700 15px 'Segoe UI', Inter, system-ui, sans-serif",
+     "x": "panel.x+20",
+     "baseline": "middle"
+    },
+    "done": {
+     "color": "#7DFFA8",
+     "note": "strike-through like .goals li.done"
+    }
+   },
+   "size_1x": [
+    372,
+    52
+   ],
+   "size_2x": [
+    744,
+    104
+   ],
+   "files": [
+    "objective_strip_cyan.png",
+    "objective_strip_cyan@2x.png"
+   ]
+  },
+  "objective_strip_gold": {
+   "kind": "9slice",
+   "panel_1x": [
+    360,
+    40
+   ],
+   "glow_pad_1x": 6,
+   "insets_1x": {
+    "top": 16,
+    "right": 16,
+    "bottom": 16,
+    "left": 22
+   },
+   "use": "objective strip \u2014 current goal = gold donut pad",
+   "draw": "panel rect expanded by glow_pad on every side; stretch width to text",
+   "anchor": "top-left x=16 y=16 (1280x720); width 360-460 to fit copy",
+   "text": {
+    "objective": {
+     "color": "#F4F1EA",
+     "font": "700 15px 'Segoe UI', Inter, system-ui, sans-serif",
+     "x": "panel.x+20",
+     "baseline": "middle"
+    },
+    "done": {
+     "color": "#7DFFA8",
+     "note": "strike-through like .goals li.done"
+    }
+   },
+   "size_1x": [
+    372,
+    52
+   ],
+   "size_2x": [
+    744,
+    104
+   ],
+   "files": [
+    "objective_strip_gold.png",
+    "objective_strip_gold@2x.png"
+   ]
+  },
+  "objective_strip_hot": {
+   "kind": "9slice",
+   "panel_1x": [
+    360,
+    40
+   ],
+   "glow_pad_1x": 6,
+   "insets_1x": {
+    "top": 16,
+    "right": 16,
+    "bottom": 16,
+    "left": 22
+   },
+   "use": "objective strip \u2014 current goal = pink burnout box",
+   "draw": "panel rect expanded by glow_pad on every side; stretch width to text",
+   "anchor": "top-left x=16 y=16 (1280x720); width 360-460 to fit copy",
+   "text": {
+    "objective": {
+     "color": "#F4F1EA",
+     "font": "700 15px 'Segoe UI', Inter, system-ui, sans-serif",
+     "x": "panel.x+20",
+     "baseline": "middle"
+    },
+    "done": {
+     "color": "#7DFFA8",
+     "note": "strike-through like .goals li.done"
+    }
+   },
+   "size_1x": [
+    372,
+    52
+   ],
+   "size_2x": [
+    744,
+    104
+   ],
+   "files": [
+    "objective_strip_hot.png",
+    "objective_strip_hot@2x.png"
+   ]
+  },
+  "objective_strip_alley": {
+   "kind": "9slice",
+   "panel_1x": [
+    360,
+    40
+   ],
+   "glow_pad_1x": 6,
+   "insets_1x": {
+    "top": 16,
+    "right": 16,
+    "bottom": 16,
+    "left": 22
+   },
+   "use": "objective strip \u2014 current goal = escape to NW alley",
+   "draw": "panel rect expanded by glow_pad on every side; stretch width to text",
+   "anchor": "top-left x=16 y=16 (1280x720); width 360-460 to fit copy",
+   "text": {
+    "objective": {
+     "color": "#F4F1EA",
+     "font": "700 15px 'Segoe UI', Inter, system-ui, sans-serif",
+     "x": "panel.x+20",
+     "baseline": "middle"
+    },
+    "done": {
+     "color": "#7DFFA8",
+     "note": "strike-through like .goals li.done"
+    }
+   },
+   "size_1x": [
+    372,
+    52
+   ],
+   "size_2x": [
+    744,
+    104
+   ],
+   "files": [
+    "objective_strip_alley.png",
+    "objective_strip_alley@2x.png"
+   ]
+  },
+  "counter_frame": {
+   "kind": "9slice",
+   "panel_1x": [
+    84,
+    30
+   ],
+   "glow_pad_1x": 5,
+   "insets_1x": {
+    "top": 13,
+    "right": 13,
+    "bottom": 13,
+    "left": 13
+   },
+   "use": "cyan x.x/6s counter while drifting in the circle (time is being banked)",
+   "draw": "inside the objective strip, right-aligned: x = strip.right-6-84, y = strip.y+5",
+   "text": {
+    "color": "#3EE0FF",
+    "font": "800 17px 'Segoe UI', Inter, system-ui, sans-serif",
+    "align": "center",
+    "sample": "4.2/6s",
+    "note": "font-variant-numeric: tabular-nums (canvas: pad to fixed width; '6.0/6s' measures ~56px @17px)"
+   },
+   "size_1x": [
+    94,
+    40
+   ],
+   "size_2x": [
+    188,
+    80
+   ],
+   "files": [
+    "counter_frame.png",
+    "counter_frame@2x.png"
+   ]
+  },
+  "counter_frame_paused": {
+   "kind": "9slice",
+   "panel_1x": [
+    84,
+    30
+   ],
+   "glow_pad_1x": 5,
+   "insets_1x": {
+    "top": 13,
+    "right": 13,
+    "bottom": 13,
+    "left": 13
+   },
+   "use": "counter between slides (C34 'Cyan paused' \u2014 time held, not lost)",
+   "draw": "inside the objective strip, right-aligned: x = strip.right-6-84, y = strip.y+5",
+   "text": {
+    "color": "#9AA3B5",
+    "font": "800 17px 'Segoe UI', Inter, system-ui, sans-serif",
+    "align": "center",
+    "sample": "4.2/6s",
+    "note": "font-variant-numeric: tabular-nums (canvas: pad to fixed width; '6.0/6s' measures ~56px @17px)"
+   },
+   "size_1x": [
+    94,
+    40
+   ],
+   "size_2x": [
+    188,
+    80
+   ],
+   "files": [
+    "counter_frame_paused.png",
+    "counter_frame_paused@2x.png"
+   ]
+  },
+  "counter_frame_locked": {
+   "kind": "9slice",
+   "panel_1x": [
+    84,
+    30
+   ],
+   "glow_pad_1x": 5,
+   "insets_1x": {
+    "top": 13,
+    "right": 13,
+    "bottom": 13,
+    "left": 13
+   },
+   "use": "6.0/6s reached (DRIFT LOCKED beat, ~1.2s then hide or mark done)",
+   "draw": "inside the objective strip, right-aligned: x = strip.right-6-84, y = strip.y+5",
+   "text": {
+    "color": "#07080D",
+    "font": "800 17px 'Segoe UI', Inter, system-ui, sans-serif",
+    "align": "center",
+    "sample": "4.2/6s",
+    "note": "font-variant-numeric: tabular-nums (canvas: pad to fixed width; '6.0/6s' measures ~56px @17px)"
+   },
+   "size_1x": [
+    94,
+    40
+   ],
+   "size_2x": [
+    188,
+    80
+   ],
+   "files": [
+    "counter_frame_locked.png",
+    "counter_frame_locked@2x.png"
+   ]
+  },
+  "chip_gold": {
+   "kind": "9slice",
+   "panel_1x": [
+    156,
+    56
+   ],
+   "glow_pad_1x": 6,
+   "insets_1x": {
+    "top": 18,
+    "right": 18,
+    "bottom": 18,
+    "left": 18
+   },
+   "use": "STYLE + REP chip",
+   "anchor": "top-right row, 16px from right/top, 10px gap between chips",
+   "text": {
+    "label": {
+     "color": "#9AA3B5",
+     "font": "700 10px 'Segoe UI', Inter, system-ui, sans-serif",
+     "letterSpacing": "0.14em",
+     "x": "panel.x+14",
+     "y": "panel.y+17",
+     "case": "upper"
+    },
+    "value": {
+     "color": "#FFD15A",
+     "font": "800 24px 'Segoe UI', Inter, system-ui, sans-serif",
+     "x": "panel.x+14",
+     "y": "panel.y+43",
+     "tabular": true
+    },
+    "rep": {
+     "stars": "rep_star_full / rep_star_empty, 3 slots, 14px, gap 1px, right-aligned at panel.right-14, y=panel.y+7",
+     "label": {
+      "text": "REP",
+      "color": "#FFD15A",
+      "font": "800 10px 'Segoe UI', Inter, system-ui, sans-serif"
+     },
+     "note": "REP (\u2605\u2605\u2605) is a LATER rating (DECISIONS Intake 2); hide the star row until Producer gives a source value"
+    }
+   },
+   "size_1x": [
+    168,
+    68
+   ],
+   "size_2x": [
+    336,
+    136
+   ],
+   "files": [
+    "chip_gold.png",
+    "chip_gold@2x.png"
+   ]
+  },
+  "chip_cyan": {
+   "kind": "9slice",
+   "panel_1x": [
+    156,
+    56
+   ],
+   "glow_pad_1x": 6,
+   "insets_1x": {
+    "top": 18,
+    "right": 18,
+    "bottom": 18,
+    "left": 18
+   },
+   "use": "optional: HYPE \u00d7n chip",
+   "anchor": "top-right row, 16px from right/top, 10px gap between chips",
+   "text": {
+    "label": {
+     "color": "#9AA3B5",
+     "font": "700 10px 'Segoe UI', Inter, system-ui, sans-serif",
+     "letterSpacing": "0.14em",
+     "x": "panel.x+14",
+     "y": "panel.y+17",
+     "case": "upper"
+    },
+    "value": {
+     "color": "#3EE0FF",
+     "font": "800 24px 'Segoe UI', Inter, system-ui, sans-serif",
+     "x": "panel.x+14",
+     "y": "panel.y+43",
+     "tabular": true
+    }
+   },
+   "size_1x": [
+    168,
+    68
+   ],
+   "size_2x": [
+    336,
+    136
+   ],
+   "files": [
+    "chip_cyan.png",
+    "chip_cyan@2x.png"
+   ]
+  },
+  "chip_hot": {
+   "kind": "9slice",
+   "panel_1x": [
+    156,
+    56
+   ],
+   "glow_pad_1x": 6,
+   "insets_1x": {
+    "top": 18,
+    "right": 18,
+    "bottom": 18,
+    "left": 18
+   },
+   "use": "optional: CLOCK chip",
+   "anchor": "top-right row, 16px from right/top, 10px gap between chips",
+   "text": {
+    "label": {
+     "color": "#9AA3B5",
+     "font": "700 10px 'Segoe UI', Inter, system-ui, sans-serif",
+     "letterSpacing": "0.14em",
+     "x": "panel.x+14",
+     "y": "panel.y+17",
+     "case": "upper"
+    },
+    "value": {
+     "color": "#FF2D6A",
+     "font": "800 24px 'Segoe UI', Inter, system-ui, sans-serif",
+     "x": "panel.x+14",
+     "y": "panel.y+43",
+     "tabular": true
+    }
+   },
+   "size_1x": [
+    168,
+    68
+   ],
+   "size_2x": [
+    336,
+    136
+   ],
+   "files": [
+    "chip_hot.png",
+    "chip_hot@2x.png"
+   ]
+  },
+  "chip_health": {
+   "kind": "9slice",
+   "panel_1x": [
+    156,
+    56
+   ],
+   "glow_pad_1x": 6,
+   "insets_1x": {
+    "top": 18,
+    "right": 18,
+    "bottom": 18,
+    "left": 18
+   },
+   "use": "car-health chip (C36): 3 pips = 3 - policeBumps",
+   "anchor": "top-right, under the Style chip: x = W-16-156, y = 16+56+10",
+   "text": {
+    "label": {
+     "text": "CAR HEALTH",
+     "color": "#9AA3B5",
+     "font": "700 10px 'Segoe UI', Inter, system-ui, sans-serif",
+     "letterSpacing": "0.14em",
+     "x": "panel.x+14",
+     "y": "panel.y+17"
+    }
+   },
+   "pips": "3 x pip_* at x = panel.x+14 + i*38 (30 wide + 8 gap), y = panel.y+30; draw each pip image offset by its glow_pad (4)",
+   "size_1x": [
+    168,
+    68
+   ],
+   "size_2x": [
+    336,
+    136
+   ],
+   "files": [
+    "chip_health.png",
+    "chip_health@2x.png"
+   ]
+  },
+  "pip_full": {
+   "kind": "sprite",
+   "panel_1x": [
+    30,
+    12
+   ],
+   "glow_pad_1x": 4,
+   "use": "health left",
+   "size_1x": [
+    38,
+    20
+   ],
+   "size_2x": [
+    76,
+    40
+   ],
+   "files": [
+    "pip_full.png",
+    "pip_full@2x.png"
+   ]
+  },
+  "pip_empty": {
+   "kind": "sprite",
+   "panel_1x": [
+    30,
+    12
+   ],
+   "glow_pad_1x": 4,
+   "use": "lost to a bump",
+   "size_1x": [
+    38,
+    20
+   ],
+   "size_2x": [
+    76,
+    40
+   ],
+   "files": [
+    "pip_empty.png",
+    "pip_empty@2x.png"
+   ]
+  },
+  "pip_hit": {
+   "kind": "sprite",
+   "panel_1x": [
+    30,
+    12
+   ],
+   "glow_pad_1x": 4,
+   "use": "flash frame for the pip that just emptied (0-120ms), then pip_empty",
+   "size_1x": [
+    38,
+    20
+   ],
+   "size_2x": [
+    76,
+    40
+   ],
+   "files": [
+    "pip_hit.png",
+    "pip_hit@2x.png"
+   ]
+  },
+  "health_pips_3": {
+   "kind": "sprite",
+   "panel_1x": [
+    106,
+    12
+   ],
+   "glow_pad_1x": 4,
+   "use": "pre-baked 3-pip row, 3 health (0 bumps). Same pixels as 3 x pip_*",
+   "size_1x": [
+    114,
+    20
+   ],
+   "size_2x": [
+    228,
+    40
+   ],
+   "files": [
+    "health_pips_3.png",
+    "health_pips_3@2x.png"
+   ]
+  },
+  "health_pips_2": {
+   "kind": "sprite",
+   "panel_1x": [
+    106,
+    12
+   ],
+   "glow_pad_1x": 4,
+   "use": "pre-baked 3-pip row, 2 health (1 bumps). Same pixels as 3 x pip_*",
+   "size_1x": [
+    114,
+    20
+   ],
+   "size_2x": [
+    228,
+    40
+   ],
+   "files": [
+    "health_pips_2.png",
+    "health_pips_2@2x.png"
+   ]
+  },
+  "health_pips_1": {
+   "kind": "sprite",
+   "panel_1x": [
+    106,
+    12
+   ],
+   "glow_pad_1x": 4,
+   "use": "pre-baked 3-pip row, 1 health (2 bumps). Same pixels as 3 x pip_*",
+   "size_1x": [
+    114,
+    20
+   ],
+   "size_2x": [
+    228,
+    40
+   ],
+   "files": [
+    "health_pips_1.png",
+    "health_pips_1@2x.png"
+   ]
+  },
+  "health_pips_0": {
+   "kind": "sprite",
+   "panel_1x": [
+    106,
+    12
+   ],
+   "glow_pad_1x": 4,
+   "use": "pre-baked 3-pip row, 0 health (3 bumps). Same pixels as 3 x pip_*",
+   "size_1x": [
+    114,
+    20
+   ],
+   "size_2x": [
+    228,
+    40
+   ],
+   "files": [
+    "health_pips_0.png",
+    "health_pips_0@2x.png"
+   ]
+  },
+  "rep_star_full": {
+   "kind": "sprite",
+   "panel_1x": [
+    14,
+    14
+   ],
+   "glow_pad_1x": 2,
+   "use": "REP star (LATER; see chip_gold.text.rep)",
+   "size_1x": [
+    18,
+    18
+   ],
+   "size_2x": [
+    36,
+    36
+   ],
+   "files": [
+    "rep_star_full.png",
+    "rep_star_full@2x.png"
+   ]
+  },
+  "rep_star_empty": {
+   "kind": "sprite",
+   "panel_1x": [
+    14,
+    14
+   ],
+   "glow_pad_1x": 2,
+   "use": "REP star (LATER; see chip_gold.text.rep)",
+   "size_1x": [
+    18,
+    18
+   ],
+   "size_2x": [
+    36,
+    36
+   ],
+   "files": [
+    "rep_star_empty.png",
+    "rep_star_empty@2x.png"
+   ]
+  },
+  "endcard_frame_win": {
+   "kind": "9slice",
+   "panel_1x": [
+    500,
+    400
+   ],
+   "glow_pad_1x": 10,
+   "insets_1x": {
+    "top": 30,
+    "right": 30,
+    "bottom": 30,
+    "left": 30
+   },
+   "use": "CLIP BANKED end card panel (A6 fix 1: card left, car framed at 0.70W)",
+   "anchor": "left x=48, vertically centred; width min(500, W-96); height to content (~360-420)",
+   "text": {
+    "tag": {
+     "color": "#3EE0FF",
+     "font": "700 12px 'Segoe UI', Inter, system-ui, sans-serif",
+     "letterSpacing": "0.18em"
+    },
+    "subline": {
+     "color": "#9AA3B5",
+     "font": "600 13px 'Segoe UI', Inter, system-ui, sans-serif",
+     "letterSpacing": "0.16em"
+    },
+    "row_label": {
+     "color": "#9AA3B5",
+     "font": "700 11px 'Segoe UI', Inter, system-ui, sans-serif",
+     "letterSpacing": "0.14em"
+    },
+    "peak_style": {
+     "color": "#FFD15A",
+     "font": "800 44px 'Segoe UI', Inter, system-ui, sans-serif"
+    },
+    "best_chain": {
+     "color": "#3EE0FF",
+     "font": "800 22px 'Segoe UI', Inter, system-ui, sans-serif"
+    },
+    "pads": {
+     "cyan": "#3EE0FF",
+     "gold": "#FFD15A",
+     "pink": "#FF2D6A",
+     "arrow": "#2A3142"
+    }
+   },
+   "size_1x": [
+    520,
+    420
+   ],
+   "size_2x": [
+    1040,
+    840
+   ],
+   "files": [
+    "endcard_frame_win.png",
+    "endcard_frame_win@2x.png"
+   ]
+  },
+  "endcard_frame_fail": {
+   "kind": "9slice",
+   "panel_1x": [
+    500,
+    400
+   ],
+   "glow_pad_1x": 10,
+   "insets_1x": {
+    "top": 30,
+    "right": 30,
+    "bottom": 30,
+    "left": 30
+   },
+   "use": "SHUT DOWN end card panel (A6 fix 1: card left, car framed at 0.70W)",
+   "anchor": "left x=48, vertically centred; width min(500, W-96); height to content (~360-420)",
+   "text": {
+    "tag": {
+     "color": "#3EE0FF",
+     "font": "700 12px 'Segoe UI', Inter, system-ui, sans-serif",
+     "letterSpacing": "0.18em"
+    },
+    "subline": {
+     "color": "#9AA3B5",
+     "font": "600 13px 'Segoe UI', Inter, system-ui, sans-serif",
+     "letterSpacing": "0.16em"
+    },
+    "row_label": {
+     "color": "#9AA3B5",
+     "font": "700 11px 'Segoe UI', Inter, system-ui, sans-serif",
+     "letterSpacing": "0.14em"
+    },
+    "peak_style": {
+     "color": "#FFD15A",
+     "font": "800 44px 'Segoe UI', Inter, system-ui, sans-serif"
+    },
+    "best_chain": {
+     "color": "#3EE0FF",
+     "font": "800 22px 'Segoe UI', Inter, system-ui, sans-serif"
+    },
+    "pads": {
+     "cyan": "#3EE0FF",
+     "gold": "#FFD15A",
+     "pink": "#FF2D6A",
+     "arrow": "#2A3142"
+    }
+   },
+   "size_1x": [
+    520,
+    420
+   ],
+   "size_2x": [
+    1040,
+    840
+   ],
+   "files": [
+    "endcard_frame_fail.png",
+    "endcard_frame_fail@2x.png"
+   ]
+  },
+  "banner_clip_banked": {
+   "kind": "sprite",
+   "panel_1x": [
+    444,
+    72
+   ],
+   "glow_pad_1x": 8,
+   "use": "end card headline banner with baked 'CLIP BANKED' (Inter Black 50px)",
+   "anchor": "inside end card: x = card.x+28-8, y = card.y+44-8 (after the tag line)",
+   "size_1x": [
+    460,
+    88
+   ],
+   "size_2x": [
+    920,
+    176
+   ],
+   "files": [
+    "banner_clip_banked.png",
+    "banner_clip_banked@2x.png"
+   ]
+  },
+  "banner_gold_blank": {
+   "kind": "9slice_h",
+   "panel_1x": [
+    444,
+    72
+   ],
+   "glow_pad_1x": 8,
+   "insets_1x": {
+    "top": 8,
+    "bottom": 8,
+    "left": 24,
+    "right": 70
+   },
+   "use": "blank gold banner \u2014 Code draws the headline",
+   "text": {
+    "color": "#07080D",
+    "font": "900 50px 'Segoe UI', Inter, system-ui, sans-serif",
+    "x": "panel.x+14+18",
+    "baseline": "middle",
+    "letterSpacing": "-0.02em"
+   },
+   "note": "horizontal stretch only (slanted ends); keep height 72",
+   "size_1x": [
+    460,
+    88
+   ],
+   "size_2x": [
+    920,
+    176
+   ],
+   "files": [
+    "banner_gold_blank.png",
+    "banner_gold_blank@2x.png"
+   ]
+  },
+  "banner_shut_down": {
+   "kind": "sprite",
+   "panel_1x": [
+    444,
+    72
+   ],
+   "glow_pad_1x": 8,
+   "use": "end card headline banner with baked 'SHUT DOWN' (Inter Black 50px)",
+   "anchor": "inside end card: x = card.x+28-8, y = card.y+44-8 (after the tag line)",
+   "size_1x": [
+    460,
+    88
+   ],
+   "size_2x": [
+    920,
+    176
+   ],
+   "files": [
+    "banner_shut_down.png",
+    "banner_shut_down@2x.png"
+   ]
+  },
+  "banner_hot_blank": {
+   "kind": "9slice_h",
+   "panel_1x": [
+    444,
+    72
+   ],
+   "glow_pad_1x": 8,
+   "insets_1x": {
+    "top": 8,
+    "bottom": 8,
+    "left": 24,
+    "right": 70
+   },
+   "use": "blank hot banner \u2014 Code draws the headline",
+   "text": {
+    "color": "#F4F1EA",
+    "font": "900 50px 'Segoe UI', Inter, system-ui, sans-serif",
+    "x": "panel.x+14+18",
+    "baseline": "middle",
+    "letterSpacing": "-0.02em"
+   },
+   "note": "horizontal stretch only (slanted ends); keep height 72",
+   "size_1x": [
+    460,
+    88
+   ],
+   "size_2x": [
+    920,
+    176
+   ],
+   "files": [
+    "banner_hot_blank.png",
+    "banner_hot_blank@2x.png"
+   ]
+  },
+  "a8_statusbar": {
+   "kind": "9slice",
+   "slot": "statusbar (.a8-status)",
+   "panel_1x": [
+    240,
+    40
+   ],
+   "glow_pad_1x": {
+    "top": 0,
+    "right": 0,
+    "bottom": 8,
+    "left": 0
+   },
+   "insets_1x": {
+    "top": 18,
+    "right": 18,
+    "bottom": 12,
+    "left": 18
+   },
+   "use": "C40 top status bar; hot 3px bottom edge + downward glow; top corners r17 sit inside the 22px bezel",
+   "size_1x": [
+    240,
+    48
+   ],
+   "size_2x": [
+    480,
+    96
+   ],
+   "files": [
+    "a8_statusbar.png",
+    "a8_statusbar@2x.png"
+   ]
+  },
+  "a8_dock": {
+   "kind": "9slice",
+   "slot": "dock (.a8-dock)",
+   "panel_1x": [
+    240,
+    32
+   ],
+   "glow_pad_1x": 0,
+   "insets_1x": {
+    "top": 4,
+    "right": 18,
+    "bottom": 18,
+    "left": 18
+   },
+   "use": "C40 bottom dock (MAP / ALERTS / CLIP); curb 3px top edge; bottom corners r17",
+   "size_1x": [
+    240,
+    32
+   ],
+   "size_2x": [
+    480,
+    64
+   ],
+   "files": [
+    "a8_dock.png",
+    "a8_dock@2x.png"
+   ]
+  },
+  "a8_bezel": {
+   "kind": "9slice",
+   "slot": "bezel (.a8-bezel)",
+   "panel_1x": [
+    240,
+    240
+   ],
+   "glow_pad_1x": 0,
+   "insets_1x": {
+    "top": 24,
+    "right": 24,
+    "bottom": 24,
+    "left": 24
+   },
+   "use": "phone/dash screen bezel: 5px ground ring + 1px curb hairline, 22px inner radius; transparent centre (no fill)",
+   "size_1x": [
+    240,
+    240
+   ],
+   "size_2x": [
+    480,
+    480
+   ],
+   "files": [
+    "a8_bezel.png",
+    "a8_bezel@2x.png"
+   ]
+  },
+  "chip_sm_gold": {
+   "kind": "9slice",
+   "panel_1x": [
+    80,
+    24
+   ],
+   "glow_pad_1x": 3,
+   "insets_1x": {
+    "top": 9,
+    "right": 9,
+    "bottom": 9,
+    "left": 9
+   },
+   "use": "status-bar STYLE + REP chip (a8_style_rep_chip)",
+   "size_1x": [
+    86,
+    30
+   ],
+   "size_2x": [
+    172,
+    60
+   ],
+   "files": [
+    "chip_sm_gold.png",
+    "chip_sm_gold@2x.png"
+   ]
+  },
+  "chip_sm_cyan": {
+   "kind": "9slice",
+   "panel_1x": [
+    80,
+    24
+   ],
+   "glow_pad_1x": 3,
+   "insets_1x": {
+    "top": 9,
+    "right": 9,
+    "bottom": 9,
+    "left": 9
+   },
+   "use": "status-bar HYPE chip",
+   "size_1x": [
+    86,
+    30
+   ],
+   "size_2x": [
+    172,
+    60
+   ],
+   "files": [
+    "chip_sm_cyan.png",
+    "chip_sm_cyan@2x.png"
+   ]
+  },
+  "chip_sm_hot": {
+   "kind": "9slice",
+   "panel_1x": [
+    80,
+    24
+   ],
+   "glow_pad_1x": 3,
+   "insets_1x": {
+    "top": 9,
+    "right": 9,
+    "bottom": 9,
+    "left": 9
+   },
+   "use": "status-bar CLOCK / CAR HEALTH chip (a8_health_pips)",
+   "size_1x": [
+    86,
+    30
+   ],
+   "size_2x": [
+    172,
+    60
+   ],
+   "files": [
+    "chip_sm_hot.png",
+    "chip_sm_hot@2x.png"
+   ]
+  },
+  "chip_sm_curb": {
+   "kind": "9slice",
+   "panel_1x": [
+    80,
+    24
+   ],
+   "glow_pad_1x": 3,
+   "insets_1x": {
+    "top": 9,
+    "right": 9,
+    "bottom": 9,
+    "left": 9
+   },
+   "use": "neutral status chip (CLIP, heat)",
+   "size_1x": [
+    86,
+    30
+   ],
+   "size_2x": [
+    172,
+    60
+   ],
+   "files": [
+    "chip_sm_curb.png",
+    "chip_sm_curb@2x.png"
+   ]
+  },
+  "chip_sm_alley": {
+   "kind": "9slice",
+   "panel_1x": [
+    80,
+    24
+   ],
+   "glow_pad_1x": 3,
+   "insets_1x": {
+    "top": 9,
+    "right": 9,
+    "bottom": 9,
+    "left": 9
+   },
+   "use": "A13: C60 ESCAPE clock pill (alley green #7DFFA8)",
+   "size_1x": [
+    86,
+    30
+   ],
+   "size_2x": [
+    172,
+    60
+   ],
+   "files": [
+    "chip_sm_alley.png",
+    "chip_sm_alley@2x.png"
+   ]
+  },
+  "counter_sm": {
+   "kind": "9slice",
+   "panel_1x": [
+    56,
+    18
+   ],
+   "glow_pad_1x": 2,
+   "insets_1x": {
+    "top": 7,
+    "right": 7,
+    "bottom": 7,
+    "left": 7
+   },
+   "use": "compact x.x/6s counter for C40 `.a8-objective .prog` (55x18) \u2014 states as counter_frame",
+   "size_1x": [
+    60,
+    22
+   ],
+   "size_2x": [
+    120,
+    44
+   ],
+   "files": [
+    "counter_sm.png",
+    "counter_sm@2x.png"
+   ]
+  },
+  "counter_sm_paused": {
+   "kind": "9slice",
+   "panel_1x": [
+    56,
+    18
+   ],
+   "glow_pad_1x": 2,
+   "insets_1x": {
+    "top": 7,
+    "right": 7,
+    "bottom": 7,
+    "left": 7
+   },
+   "use": "compact x.x/6s counter for C40 `.a8-objective .prog` (55x18) \u2014 states as counter_frame_paused",
+   "size_1x": [
+    60,
+    22
+   ],
+   "size_2x": [
+    120,
+    44
+   ],
+   "files": [
+    "counter_sm_paused.png",
+    "counter_sm_paused@2x.png"
+   ]
+  },
+  "counter_sm_locked": {
+   "kind": "9slice",
+   "panel_1x": [
+    56,
+    18
+   ],
+   "glow_pad_1x": 2,
+   "insets_1x": {
+    "top": 7,
+    "right": 7,
+    "bottom": 7,
+    "left": 7
+   },
+   "use": "compact x.x/6s counter for C40 `.a8-objective .prog` (55x18) \u2014 states as counter_frame_locked",
+   "size_1x": [
+    60,
+    22
+   ],
+   "size_2x": [
+    120,
+    44
+   ],
+   "files": [
+    "counter_sm_locked.png",
+    "counter_sm_locked@2x.png"
+   ]
+  },
+  "pip_sm_full": {
+   "kind": "sprite",
+   "panel_1x": [
+    18,
+    10
+   ],
+   "glow_pad_1x": 3,
+   "use": "C40 status-bar pip (full), 18x10 like `.a8-status .bumps .pips i`",
+   "size_1x": [
+    24,
+    16
+   ],
+   "size_2x": [
+    48,
+    32
+   ],
+   "files": [
+    "pip_sm_full.png",
+    "pip_sm_full@2x.png"
+   ]
+  },
+  "pip_sm_empty": {
+   "kind": "sprite",
+   "panel_1x": [
+    18,
+    10
+   ],
+   "glow_pad_1x": 3,
+   "use": "C40 status-bar pip (empty), 18x10 like `.a8-status .bumps .pips i`",
+   "size_1x": [
+    24,
+    16
+   ],
+   "size_2x": [
+    48,
+    32
+   ],
+   "files": [
+    "pip_sm_empty.png",
+    "pip_sm_empty@2x.png"
+   ]
+  },
+  "pip_sm_hit": {
+   "kind": "sprite",
+   "panel_1x": [
+    18,
+    10
+   ],
+   "glow_pad_1x": 3,
+   "use": "C40 status-bar pip (hit), 18x10 like `.a8-status .bumps .pips i`",
+   "size_1x": [
+    24,
+    16
+   ],
+   "size_2x": [
+    48,
+    32
+   ],
+   "files": [
+    "pip_sm_hit.png",
+    "pip_sm_hit@2x.png"
+   ]
+  },
+  "a8_objective_strip": {
+   "kind": "9slice",
+   "panel_1x": [
+    360,
+    40
+   ],
+   "glow_pad_1x": 6,
+   "insets_1x": {
+    "top": 16,
+    "right": 16,
+    "bottom": 16,
+    "left": 22
+   },
+   "use": "objective strip \u2014 current goal = cyan drift circle",
+   "draw": "panel rect expanded by glow_pad on every side; stretch width to text",
+   "anchor": "top-left x=16 y=16 (1280x720); width 360-460 to fit copy",
+   "text": {
+    "objective": {
+     "color": "#F4F1EA",
+     "font": "700 15px 'Segoe UI', Inter, system-ui, sans-serif",
+     "x": "panel.x+20",
+     "baseline": "middle"
+    },
+    "done": {
+     "color": "#7DFFA8",
+     "note": "strike-through like .goals li.done"
+    }
+   },
+   "size_1x": [
+    372,
+    52
+   ],
+   "size_2x": [
+    744,
+    104
+   ],
+   "files": [
+    "a8_objective_strip.png",
+    "a8_objective_strip@2x.png"
+   ],
+   "alias_of": "objective_strip_cyan"
+  },
+  "a8_style_rep_chip": {
+   "kind": "9slice",
+   "panel_1x": [
+    80,
+    24
+   ],
+   "glow_pad_1x": 3,
+   "insets_1x": {
+    "top": 9,
+    "right": 9,
+    "bottom": 9,
+    "left": 9
+   },
+   "use": "status-bar STYLE + REP chip (a8_style_rep_chip)",
+   "size_1x": [
+    86,
+    30
+   ],
+   "size_2x": [
+    172,
+    60
+   ],
+   "files": [
+    "a8_style_rep_chip.png",
+    "a8_style_rep_chip@2x.png"
+   ],
+   "alias_of": "chip_sm_gold"
+  },
+  "a8_health_pips": {
+   "kind": "9slice",
+   "panel_1x": [
+    80,
+    24
+   ],
+   "glow_pad_1x": 3,
+   "insets_1x": {
+    "top": 9,
+    "right": 9,
+    "bottom": 9,
+    "left": 9
+   },
+   "use": "status-bar CLOCK / CAR HEALTH chip (a8_health_pips)",
+   "size_1x": [
+    86,
+    30
+   ],
+   "size_2x": [
+    172,
+    60
+   ],
+   "files": [
+    "a8_health_pips.png",
+    "a8_health_pips@2x.png"
+   ],
+   "alias_of": "chip_sm_hot"
+  }
+ }
+}

@@ -1,0 +1,66 @@
+{
+ "_note": "A10 (2026-10-08 ET, D23 G1/G2, for Code C41). Art-owned wayfinding sprites. Rebuild: python3 make_wayfinding_a10.py . (deterministic, numpy + Pillow, no RNG). @2x files are exactly double; load @2x and draw at the 1x size (canvas is dpr-scaled in PLAY-THIS resize()).",
+ "palette": { "cyan": "#3EE0FF", "gold": "#FFD15A", "pink": "#FF2D6A", "alley": "#7DFFA8 (alley ONLY)", "outline/backing": "#07080D", "glint": "#F4F1EA" },
+ "units": "edge_* = screen CSS px. alley_* = world units (wu; 1 m = 10 wu), sprite 1x = 2 px/wu.",
+ "edge_arrow": {
+  "files": { "cyan": "edge_arrow_cyan(@2x).png", "gold": "edge_arrow_gold(@2x).png", "pink": "edge_arrow_pink(@2x).png", "alley": "edge_arrow_alley(@2x).png" },
+  "size_px": [36, 36],
+  "pivot_px": [18, 18],
+  "points": "+x (angle 0). Tip 13 px ahead of the pivot, back edge 10 px behind. 2 px #07080D outline + soft dark halo.",
+  "draw": "ctx.translate(ex, ey); ctx.rotate(ang); ctx.drawImage(img, -18, -18, 36, 36)  // ex,ey = edge point from drawEdgeCue, ang = atan2(target - edge point) (C41 ang2)",
+  "alpha": 0.95,
+  "blend": "source-over",
+  "order": "screen space, after the world ctx.restore(), in the drawEdgeCue slot (last canvas draw; DOM HUD sits above)",
+  "screen_margin_px": "pivot on the margin rectangle: 42 px from each edge (C41 default; HUD A: top/bottom = inset + 26, as C40). Keep C41's HUD-rect walk, but test the arrow+tag box (below), not just the label.",
+  "animation": "idle nudge: offset the arrow 0 -> 3 px along its direction, sin, 1.4 Hz. On objective change: scale 1.3 -> 1.0 over 0.18 s ease-out. Tag stays still."
+ },
+ "edge_tag": {
+  "files": { "cyan": "edge_tag_cyan(@2x).png", "gold": "edge_tag_gold(@2x).png", "pink": "edge_tag_pink(@2x).png", "alley": "edge_tag_alley(@2x).png" },
+  "kind": "9-slice, horizontal stretch only. Blank pill: Code draws the label.",
+  "size_px": [64, 28],
+  "pill_px": "60x24 inside a 2 px pad (radius 12). #07080D fill at 86 %, 2 px pad-colour border, 1 px dark keyline + soft halo.",
+  "insets_px": { "left": 14, "right": 14, "top": 0, "bottom": 0 },
+  "draw": "3 drawImage calls: left cap (0..14), middle (14..w-14) stretched, right cap (w-14..w). Height always 28 px.",
+  "width_px": "tw = clamp(ceil(ctx.measureText(label).width) + 24, 48, 128)",
+  "anchor": "always upright (no rotation). Centre = pivot - u * (16 + |u.x| * tw/2 + |u.y| * 14), u = unit vector the arrow points along. Then clamp the tag rect 8 px inside the viewport (needed at corners: an arrow walked onto the right edge but pointing down otherwise pushes the tag off-screen).",
+  "label": {
+   "font": "800 12px 'Segoe UI', Inter, system-ui, sans-serif (same stack as drawEdgeCue / A8)",
+   "letterSpacing": "0.5px",
+   "color": "the pad hex (= nextObjective().col)",
+   "align": "textAlign center, textBaseline middle, at the tag centre, y + 1 px (optical)",
+   "max_chars": 12,
+   "format": "TAG + ' ' + distance, e.g. 'DRIFT 70m', 'DONUT 110m', 'BURNOUT 120m', 'ALLEY 230m'. TAG = nextObjective().tag. Distance m = round(dist_wu / 100) * 10 (10 m steps; 1 m = 10 wu). 'BURNOUT 999m' = 12 chars = longest case (~96 px text, tag 120 px)."
+  },
+  "alpha": 1.0,
+  "blend": "source-over",
+  "order": "right after its arrow"
+ },
+ "alley_arrow": {
+  "files": "alley_arrow(@2x).png",
+  "size_wu": [88, 48],
+  "px_1x": [176, 96],
+  "pivot_wu": [4, 24],
+  "pivot_note": "tail centre. Tip is 78 wu ahead of the pivot. Points +x. #7DFFA8 block arrow, 2.5 wu #07080D outline, soft dark halo, faint #F4F1EA glint.",
+  "draw": "ctx.translate(car.x + c*34, car.y + s*34); ctx.rotate(ang); ctx.drawImage(img, -4*k, -24*k, 88*k, 48*k). ang = C41's aim (route point 140 wu ahead); k = clamp(0.58 / camZoom, 1, 1.3), so 0.45 -> 1.29 (~51 px on screen), 0.58+ -> 1.0.",
+  "alpha": 0.95,
+  "blend": "source-over",
+  "order": "world space in C41's drawAlleyRoute slot (after pads + labels, before skids, crowd, traffic, cops and the hero): under the car. Draw the chevrons first, then this arrow.",
+  "animation": "optional: nudge 0 -> 6 wu forward, sin, 1.2 Hz. Only while phase === 'escape' && !state.escaped (as C41)."
+ },
+ "alley_chevron": {
+  "files": "alley_chevron(@2x).png",
+  "tile_wu": [64, 64],
+  "px_1x": [128, 128],
+  "direction": "+x = toward the alley (rotate each tile to its route segment angle).",
+  "content": "One #7DFFA8 chevron (10 wu stroke, 3 wu #07080D outline, apex 11 wu ahead of the tile centre). It sits on a continuous #07080D backing band (y 8..56 wu, 38 % core, 6 wu soft edge in y only). The chevron stays inside x 12..50 wu, so the tile edges are band-only.",
+  "tiling": "Seamless along x. Measured: edge columns identical, max seam jump 0 at 1x and @2x, 6-tile strip in a10-sprite-sheet.png.",
+  "spacing_wu": 64,
+  "draw": "For d = 150 + phase; d < routeLength - 40; d += 64: p = at(d); translate(p.x, p.y); rotate(p.ang); drawImage(img, -32, -32, 64, 64). Start 150 (not C41's 70) so the first tile clears the arrow tip (34 + 78*1.3 = 135 wu). phase = (t * 90) % 64: keep C41's scroll toward the alley. Straight runs may instead use createPattern(img, 'repeat-x') with a 64 wu offset.",
+  "alpha": "0.85 - 0.40 * min(1, d / 1600)  (near 0.85, far 0.45)",
+  "blend": "source-over (the dark band must darken the sodium pools; screen/lighter would wash it out)",
+  "order": "same slot as the arrow, drawn before it",
+  "corners": "At C41's 90 deg turns, consecutive tiles rotate per segment and the bands overlap by up to 32 wu. That reads as a turn in the previews. To keep it cleaner, skip any d within 20 wu of a polyline vertex.",
+  "on_screen_at_0.45": "chevron about 24 px tall (54 wu incl. stroke), 29 px pitch; band 22 px"
+ },
+ "previews": "art/kit/a10-preview/: a10-composite-z045.png (main), a10-escape-z045.png, a10-composite-z058.png, a10-sprite-sheet.png, crops; a10-base-z045-before.png = same frame without A10"
+}

@@ -80,6 +80,7 @@ Every reachable Pi runs 19852ab.
 
 ## Log
 
+- 2026-11-22 23:40: (grok:Controller) **web hub** on branch `web-hub`: PI//GRID landing, `/dash/`, `/queue/`, TDT demo at `/tdt/`, read-only nginx API proxies, `scripts/web-hub.sh` (+ `web-hub-hive.timer`). Deploy: `ssh bemor@web 'cd ~/pi-uploader && git pull && sudo scripts/update.sh'` after merge. Optional tokens on web's `/etc/uploader.env`: API_TOKEN, TASK_TOKEN, HIVE_TOKEN (README §4c). Verify: `curl http://web/hub/config.json` and open `http://web/dash/`.
 - 2026-11-22 18:15: Handoff rewritten for Claude Code: state, numbered next steps, cleaned blockers. Added `scripts/export-login.py`.
 - 2026-11-22: All Pis joined Tailscale and SSH works (G1). Earlier the same day, overseer wasn't bootstrapped and the lanes showed offline, so start at G2.
 - 2026-11-22: First loop run. G3, G5 and G7 pass. G1 broke because the MSI `~/.ssh/config` mapped hosts to `%h.local` and `tiktok.local` stopped resolving. The config now uses Tailscale names (backup at `~/.ssh/config.bak-20261122`) and G1 passes again. tiktok's SSH host key matches the old `192.168.1.206` entry, which is now web's LAN IP; they may be cloned images with the same host key. Stopped at G2: blocked on sudo (see Blockers).
