@@ -147,6 +147,19 @@ and run `sudo systemctl restart overseer`. MSI and MacBook need `OLLAMA_HOST=0.0
 - `GET /fleet` (TASK_TOKEN) returns every Pi's latest OS snapshot. `POST /fleet/<host>/<action>` runs one fixed action: `status`, `logs` (`?lines=`), `check`, `restart` (that Pi's role units), `update` (`update.sh`), `reboot`.
   There is no free-form command. `restart`, `update` and `reboot` are refused on overseer itself.
 
+### e-paper status screen (optional)
+
+A Waveshare 2.13" e-paper on overseer's GPIO header shows one row per Pi: **PI** (answers SSH), **OS** (disk/mem/temp/power), **AP** (its service) and **LG** (login/phone), with the issues on the right and the time in the header.
+If the time stops moving, overseer itself is down, since e-paper keeps its last image with no power.
+```bash
+sudo ~/pi-uploader/scripts/setup-epaper.sh            # packages, SPI, driver; service stays off
+# power off, plug the display onto the header, boot, then:
+sudo ~/pi-uploader/scripts/setup-epaper.sh --enable
+python3 /opt/uploader/overseer/epaper.py --png /tmp/e.png   # preview without a display
+```
+Set `EPD_DRIVER` in `/etc/uploader.env` to match the version on the display's sticker (default `epd2in13_V4`; also `epd2in13_V2`, `_V3`, `epd2in13b_V4`), then re-run setup.
+`EPAPER_ROTATE=180` flips the image if the display is mounted upside down. It redraws when something changes and at least every 15 min.
+
 ## 4c. web (static games + files)
 
 ```bash

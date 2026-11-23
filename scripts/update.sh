@@ -15,7 +15,7 @@ fi
 if systemctl is-enabled overseer >/dev/null 2>&1; then
   /opt/uploader/venv/bin/pip install -q -r /opt/uploader/overseer/requirements.txt
 fi
-for u in uploader-brain uploader-lane@tiktok uploader-lane@insta uploader-lane@clapper overseer; do
+for u in uploader-brain uploader-lane@tiktok uploader-lane@insta uploader-lane@clapper overseer overseer-epaper; do
   if systemctl is-enabled "$u" >/dev/null 2>&1; then systemctl restart "$u" && echo "restarted $u"; fi
 done
 # web: refresh the nginx site config (your files in /srv/web are untouched)

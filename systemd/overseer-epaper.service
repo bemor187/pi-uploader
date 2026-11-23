@@ -1,0 +1,15 @@
+[Unit]
+Description=Overseer e-paper status screen (Waveshare 2.13")
+After=overseer.service
+
+[Service]
+User=__USER__
+SupplementaryGroups=spi gpio
+EnvironmentFile=-/etc/uploader.env
+WorkingDirectory=/opt/uploader/overseer
+ExecStart=/usr/bin/python3 /opt/uploader/overseer/epaper.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
