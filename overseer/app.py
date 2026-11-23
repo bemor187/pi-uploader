@@ -4,7 +4,7 @@ POST /task      {"prompt": "...", "system"?: "...", "agent"?: "msi", "model"?: "
                 Agents are Ollama or OpenAI-compatible servers (AGENTS=name=ollama:URL|model or name=openai:URL|model).
                 Routed through AGENTS in order (MSI -> MacBook -> local); first that answers wins.
 GET  /tasks     recent tasks
-GET  /digest    plain-English cluster summary written by the local model
+GET  /digest    plain-English cluster summary (first healthy agent; DIGEST_AGENT pins one)
 GET  /health    overseer ok + latest monitor snapshot (no auth)
 GET  /fleet     per-Pi OS snapshot over SSH (disk, mem, temp, power, units)   [see fleet.py]
 POST /fleet/{host}/{action}   allowlisted: status logs check restart update reboot
@@ -53,7 +53,7 @@ ALERT_URL = os.environ.get("ALERT_URL", "").strip()
 INTERVAL = float(os.environ.get("MONITOR_INTERVAL", "60"))
 DOWN_AFTER = int(os.environ.get("DOWN_AFTER", "2"))  # consecutive failures before "down"
 TASK_TIMEOUT = float(os.environ.get("TASK_TIMEOUT", "600"))
-DIGEST_AGENT = os.environ.get("DIGEST_AGENT", "local")
+DIGEST_AGENT = os.environ.get("DIGEST_AGENT", "auto")  # "auto" = same fallback order as /task
 DEFAULT_AGENTS = (
     "msi=ollama:http://msi:11434|qwen3:14b,"
     "macbook=ollama:http://macbook:11434,"
@@ -372,6 +372,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="overseer", lifespan=lifespan)
 
 
+def healthy_agents() -> list:
+    """Agents in priority order, skipping ones the monitor knows are down; the last (local) always stays."""
+    return [a for i, a in enumerate(AGENTS)
+            if i == len(AGENTS) - 1 or STATE.get(f"agent:{a['name']}", {}).get("ok") is not False]
+
+
 @app.post("/task", dependencies=[Depends(auth)])
 async def task(t: Task):
     if t.agent:
@@ -379,9 +385,7 @@ async def task(t: Task):
         if not order:
             raise HTTPException(400, f"agent must be one of {[a['name'] for a in AGENTS]}")
     else:
-        # skip agents the monitor already knows are down, but always keep the last (local)
-        order = [a for i, a in enumerate(AGENTS)
-                 if i == len(AGENTS) - 1 or STATE.get(f"agent:{a['name']}", {}).get("ok") is not False]
+        order = healthy_agents()
     tried, start = [], time.monotonic()
     for a in order:
         model = pick_model(a, t.model if t.agent else None)
@@ -462,15 +466,23 @@ async def digest():
     prompt = ("Summarize this home-cluster status for a phone notification. 3-6 short plain-English "
               "sentences: what is down right now, what failed recently, what needs a human. "
               "No markdown.\n\n" + json.dumps(facts, indent=1))
-    a = next((x for x in AGENTS if x["name"] == DIGEST_AGENT), AGENTS[-1] if AGENTS else None)
-    model = pick_model(a, None) if a else None
-    if not model:
-        return {"digest": None, "error": "no local model configured", "facts": facts}
-    try:
-        text = await ask(a, model, prompt, timeout=300)
-    except Exception as e:
-        return {"digest": None, "error": f"{a['name']}: {type(e).__name__}", "facts": facts}
-    return {"digest": text.strip(), "agent": a["name"], "model": model}
+    order = healthy_agents()
+    pinned = [x for x in AGENTS if x["name"] == DIGEST_AGENT]
+    if pinned:  # try the pinned agent first, then fall back like /task
+        order = pinned + [x for x in order if x is not pinned[0]]
+    tried = []
+    for a in order:
+        model = pick_model(a, None)
+        if not model:
+            tried.append(f"{a['name']}: no model known")
+            continue
+        try:
+            text = await ask(a, model, prompt, timeout=300)
+        except Exception as e:
+            tried.append(f"{a['name']}: {type(e).__name__}")
+            continue
+        return {"digest": text.strip(), "agent": a["name"], "model": model, "tried": tried}
+    return {"digest": None, "error": "no agent could answer", "tried": tried, "facts": facts}
 
 
 @app.get("/", response_class=HTMLResponse)

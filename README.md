@@ -137,7 +137,7 @@ and run `sudo systemctl restart overseer`. MSI and MacBook need `OLLAMA_HOST=0.0
 
 - `POST http://overseer:8200/task` with `Authorization: Bearer $TASK_TOKEN` and `{"prompt": "..."}`. Tasks go to MSI first, then the MacBook, then the local model.
   Add `"agent": "msi"` (and optionally `"model"`) to pin a task to one agent.
-- `http://overseer:8200/` shows the status page. `/health` returns JSON. `/digest?token=$TASK_TOKEN` gives a plain-English summary from the local model.
+- `http://overseer:8200/` shows the status page. `/health` returns JSON. `/digest?token=$TASK_TOKEN` gives a plain-English summary from the first healthy agent (`DIGEST_AGENT=<name>` pins one).
 - Every 60s it checks each Ollama agent, brain, the three lanes, and the hosts in `SITES` (web by default). It sends an ntfy alert when one goes down (2 failed checks in a row) or comes back up, and for each newly failed upload.
 - Auto-retry happens **once per job**, and only when brain says `lane unreachable:`. That means the lane never got the video, so it can't have been posted. Any other failure is alert-only.
 - **Fleet over SSH** (`overseer/fleet.py`). overseer runs as `bemor` and logs into every Pi with Tailscale SSH (no keys; it relies on the tailnet SSH policy allowing it, and on passwordless sudo).
