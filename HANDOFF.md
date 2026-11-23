@@ -15,27 +15,31 @@ Any agent (Claude Code, Grok, Garlic, overseer) picking this up: **read this fil
 
 Stop and hand to the user only for the steps marked **HUMAN**. Give them the exact URL or instruction, wait, then re-run that goal. Ask before anything destructive: reflashing, deleting data, `ufw` changes or overwriting `/etc/uploader.env`.
 
-## State at handoff (2026-11-22 18:15)
+## State at handoff (2026-11-22 21:55)
 
-Working end to end: brain, tiktok (posts as the account default, caption + visibility verified), clapper (Pixel; about 7.5 min per post), web, overseer (ntfy alerts live, MSI Ollama agent, nightly backups). **Left: Instagram, then SSH hardening.**
+Working end to end: brain, tiktok (posts as the account default, caption + visibility verified), clapper (Pixel; about 7.5 min per post), web, overseer (ntfy alerts, MSI Ollama agent, nightly backups).
+New tonight: **overseer watches the fleet over SSH** (`overseer/fleet.py`: `ssh:`/`os:`/`login:` checks, `GET /fleet`, `POST /fleet/<host>/<action>`); it can use **OpenAI-compatible agents** too. The **e-paper status screen** code is done, but the panel hardware is stuck (`docs/epaper.md`).
+Every reachable Pi runs 19852ab.
+**Left: insta (offline again, power), Instagram login + test Reel, clapper SSH, SSH hardening. Also replace weak power supplies.**
 
 ## Next steps (do in order)
 
-1. `git pull && ./scripts/goals.sh`. Expect G3/G6/G9 to fail only on **insta**, plus G10.
-2. **HUMAN:** the insta Pi has been offline since 15:41. Ask the user to power-cycle it (check the power and network cables near where the Pixel used to be). Poll `./scripts/goals.sh G1` until insta answers, then `./scripts/goals.sh G2` and `./scripts/goals.sh G3`.
-3. Instagram login, done from the PC because Meta rejects logins made on the Pi:
-   - on the MSI: `pip install playwright` then `python -m playwright install chromium` (one-time)
-   - `python scripts/export-login.py insta`. **HUMAN:** the user logs in in the window it opens and approves any "was this you?" on their phone, then presses Enter. The script copies the session to `insta:~/uploader-state/insta-state.json` and deletes the local copy.
+1. `git pull && ./scripts/goals.sh`. Expect failures only from **insta** (G1 G2 G3 G6 G8 G9), plus G4 (under-voltage flags) and G10.
+2. **HUMAN — insta power.** insta went dark twice on 2026-11-22: 15:41, and again about 1.5 h after the 20:03 power-cycle. Probably its power supply or cable (see the under-voltage blocker). Ask the user to swap its supply or cable, then power it on. Then `./scripts/goals.sh G1`, `G2`, `G3`, and `ssh bemor@insta 'sudo ~/pi-uploader/scripts/update.sh'` (it's behind; G8).
+3. Instagram login, done from the PC because Meta rejects logins made on the Pi. Playwright + Chromium are **already installed on the MSI**.
+   - **HUMAN:** the user runs `cd D:\pi-uploader\pi-uploader; python scripts\export-login.py insta` in their own PowerShell (it needs Enter typed in its window). They log in, approve any "was this you?", and press Enter. The script copies the session to `insta:~/uploader-state/insta-state.json`.
    - verify with `./scripts/goals.sh G6`. If it's still `logged_in: false` or checkpointed: open `http://insta:8100/login?token=<LANE_TOKEN>` for the user to clear the challenge, then `/login/done`.
 4. G9 insta: **ask the user's OK first** (an Instagram Reel can't be posted privately; the user deletes it after). Then:
    `curl -X POST http://brain/upload -H "Authorization: Bearer $API_TOKEN" -F file=@test.mp4 -F "caption=pipeline test" -F platform=insta`
    and poll `/status/<job_id>` until done. Debug failures from `~/uploader-work/debug/` on insta.
-5. Clapper SSH: ask the user to OK either `sudo tailscale set --ssh=false` on clapper or a tailnet ACL with `accept` instead of `check` for the Pis. Apply it and confirm `ssh bemor@clapper` works without re-auth.
-6. G10: on each Pi, `sudo ~/pi-uploader/scripts/harden-ssh.sh --tailscale`. Confirm a fresh `ssh bemor@<host>` works **before** moving to the next Pi, and do clapper last. Then `./scripts/goals.sh` should show ALL GOALS PASS.
-7. Optional: shorten Clapper's optional confirmation wait (it runs out its full 300 s on every post) in `lanes/clapper/` config, then do one more clapper test post with the user's OK.
-8. **e-paper status screen: blocked on hardware.** The panel takes commands but its refresh never finishes: BUSY stays high on TurnOnDisplay with both the V4 and V3 drivers. Service is disabled (`sudo systemctl enable --now overseer-epaper` to retry). **HUMAN:** check the ribbon is fully seated with the latch closed, and the HAT's switches if it has them (Display Config B, Interface 0 = 4-wire SPI). Then: `sudo systemctl start overseer-epaper`.
-9. **Power control is parked**; the notes are in `docs/power-control.md` (watchdog, GPIO reset/relay, smart plugs). Resume only when the user asks.
-10. Don't build without the user's answer (see Open decisions): a Facebook lane, or Postiz.
+5. Clapper SSH: ask the user to OK either `sudo tailscale set --ssh=false` on clapper or a tailnet ACL with `accept` instead of `check` for the Pis. Apply it and confirm `ssh bemor@clapper` works without re-auth. (overseer itself reached clapper fine over Tailscale SSH on 2026-11-22.)
+6. G10: on each Pi, `sudo ~/pi-uploader/scripts/harden-ssh.sh --tailscale`. Confirm a fresh `ssh bemor@<host>` works **before** moving to the next Pi, and do clapper last. **Also confirm overseer can still SSH to every Pi afterwards** (`POST /fleet/<host>/status`), since fleet.py depends on it. Then `./scripts/goals.sh` should show ALL GOALS PASS.
+7. **HUMAN — power supplies.** Under-voltage was seen on brain, tiktok, clapper and overseer (tiktok "under-voltage NOW" at about 20:02). Official 5V/3A for a Pi 4, 5V/5A (27W) for the Pi 5. G4 stays red until the flags clear (a reboot after swapping).
+8. **e-paper: blocked on hardware.** The full record and the resume steps are in **`docs/epaper.md`**. HUMAN: clean `sudo poweroff`, reseat the ribbon, check the switches, ideally send a photo of the board. Then run the test command in that doc, and `sudo systemctl enable --now overseer-epaper`.
+9. Optional: shorten Clapper's optional confirmation wait (it runs out its full 300 s on every post) in `lanes/clapper/` config, then do one more clapper test post with the user's OK.
+10. Optional: turn on `AUTO_RESTART=1` in overseer's env once the user is comfortable with it (see README §4b).
+11. **Power control is parked**; the notes are in `docs/power-control.md` (watchdog, GPIO reset/relay, smart plugs). Resume only when the user asks.
+12. Don't build without the user's answer (see Open decisions): a Facebook lane, or Postiz.
 
 ## Goals (in order)
 
@@ -62,10 +66,11 @@ Working end to end: brain, tiktok (posts as the account default, caption + visib
 
 ## Blockers
 
-- ~~insta Pi offline~~: the user power-cycled it at 20:03; G1–G3 and G8 pass again.
+- **HUMAN — insta offline again** (second time 2026-11-22; back briefly after the user's 20:03 power-cycle). Next step 2.
 - **HUMAN — Instagram login.** On the Pi, Instagram sends the login to `auth_platform/challengepicker`, and Meta rejects Facebook logins made on the Pi ("wrong password", no recovery) even though the same login works on phone and web. Use `scripts/export-login.py` from the PC (next step 3).
 - **Under-voltage:** overseer's new OS check reports "under-voltage since boot" on brain, tiktok, clapper and overseer (`vcgencmd get_throttled` = 0x50000). Weak power supplies or cables, which may also explain insta dying. HUMAN: use official 5V/3A (Pi 4) or 5V/5A (Pi 5) supplies and short, thick cables. The flag clears on reboot.
-- ~~Live uncommitted edits on overseer~~: app.py committed 2026-11-22 21:35; the stale clapper_flow.json was dropped. update.sh is safe on overseer again.
+- ~~Live uncommitted edits on overseer~~: app.py committed 2026-11-22 21:35; the stale clapper_flow.json was dropped. update.sh is safe on overseer again. Note: that session also left `~/agents.sh` on overseer (20:52, purpose unknown); `~/pi-uploader.corrupt-20261122-2142` can be deleted once nobody needs it.
+- **e-paper panel hardware** (refresh never completes). See `docs/epaper.md`.
 - **clapper Tailscale SSH is in check mode**, so every session needs a browser re-auth. Workaround: the MSI's `~/.ssh/config` reaches clapper over `clapper.local`. The fix needs the user's OK (next step 5). `setup.sh` runs `tailscale set --ssh`, so re-running bootstrap on clapper turns it back on.
 
 ## Open decisions (ask the user; don't build yet)
@@ -91,3 +96,4 @@ Working end to end: brain, tiktok (posts as the account default, caption + visib
 - 2026-11-22 21:20: e-paper: the driver moved to `/usr/local/lib/epaper` (a git clean of /opt/uploader had removed `overseer/vendor/`). The HAT 5V now stays on, with deep sleep between refreshes and a 1 s settle at power-on. Still blocked: the refresh never completes (BUSY stuck high) with V4 and V3, so it's likely the ribbon or HAT seating. Service stopped. Found uncommitted live edits on overseer from another session (see Blockers).
 - 2026-11-22 21:35: Committed the other session's live overseer edit (OpenAI-compatible agents in `app.py`). Did NOT commit its `clapper_flow.json`: that's the old uncalibrated template, while clapper's live file matches the calibrated one in git. Ran update.sh on every reachable Pi.
 - 2026-11-22 21:46: Every reachable Pi is updated to 19852ab (insta unreachable again, its second outage tonight). overseer rebooted unexpectedly at 21:38, probably an abrupt power-off, which left 12 empty git objects in ~/pi-uploader. Recloned it (old copy at ~/pi-uploader.corrupt-20261122-2142); /etc/uploader.env, overseer.db and the e-paper driver are intact. e-paper still stuck on BUSY after the reboot; service disabled. G4 fails only on 'under-voltage since boot' for brain, clapper and tiktok.
+- 2026-11-22 21:55: e-paper diagnosed down to the hardware: no GPIO/SPI conflicts and a clean config.txt; the stock driver `Clear(0xFF)` holds BUSY high for 120+ s while init and SWRESET work. So it's the ribbon, the HAT switch or the panel. The full record is in `docs/epaper.md`. HANDOFF state and next steps rewritten for the handoff.
