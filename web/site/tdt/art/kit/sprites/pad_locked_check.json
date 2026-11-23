@@ -1,0 +1,24 @@
+{
+  "_note": "A9 (2026-10-08 ET, D23 G6): ground check decal for a LOCKED pad. Art-owned. Rebuild: python3 make_pad_decal_a9.py . (deterministic, numpy + Pillow).",
+  "files": { "1x": "pad_locked_check.png", "2x": "pad_locked_check@2x.png" },
+  "px": { "1x": [256, 256], "2x": [512, 512] },
+  "content": "Top-down ground stencil, centred, transparent. Ink #F4F1EA ring (r 0.425 of size, stroke 0.038) + check mark (stroke 0.09, round caps), 0.022 dark keyline #07080D @72 %, soft dark disc #07080D @38 % (r 0.47) as a contrast pocket. Light paint wear (alpha 0.86-1.0). No pad hue: reads as 'done' on cyan, gold, pink fill and on bare asphalt.",
+  "draw": {
+    "image": "Load the @2x file only and scale it down; drawImage(img, cx - s/2, cy - s/2, s, s) in world space (inside the camera transform).",
+    "size_wu": { "drift": 180, "donut": 120, "burnout": 110 },
+    "centre": { "drift": "INTER.x, INTER.y (r 360 -> decal = 0.25 of the ring diameter, sits in the hub junction)", "donut": "DONUT.x, DONUT.y (r 90 -> 0.67 of the pad diameter)", "burnout": "BURNOUT centre (240x140 box -> 0.79 of its height)" },
+    "on_screen_px": { "zoom_0.45": { "drift": 81, "donut": 54, "burnout": 50 }, "zoom_1.0": { "drift": 180, "donut": 120, "burnout": 110 } },
+    "alpha": 0.9,
+    "blend": "source-over (globalCompositeOperation default). Not screen/lighter: the dark keyline must darken bright pad fill.",
+    "order": "After the pad fill + ring/stroke (and after the locked-pad desaturate), BEFORE the world labels, guide arrow, skids, smoke, crowd, traffic, cops and the hero car. I.e. under the car, over the pad fill. In PLAY-THIS draw() that is right before the ALLEY box line `ctx.fillStyle=\"rgba(90,255,150,.2)\"; ctx.fillRect(ALLEY.x,...`.",
+    "show_when": { "drift": "state.driftTime >= DRIFT_TARGET", "donut": "state.didDonut", "burnout": "state.didBurn" },
+    "lock_in_anim_optional": "0.25 s ease-out: scale 1.3 -> 1.0, alpha 0 -> 0.9, from the lock moment. Static afterwards. Hidden on the end card like other world art (it is world art, so it shows in replay frames only if pads draw there)."
+  },
+  "locked_pad_desaturate_suggestion": {
+    "rule": "Locked pad colour = mix(pad rgb, muted #9AA3B5, 0.75), alpha x0.6. Keeps a 25 % hint of the pad identity so the order still reads.",
+    "gold_ring": "rgba(179,175,158,0.33)  (was rgba(255,209,90,0.55))",
+    "pink_fill_stroke": "fill rgba(179,133,162,0.11) / stroke #B385A2  (was rgba(255,45,106,0.18) / #FF2D6A)",
+    "cyan_ring": "rgba(131,178,199,0.45)  (was rgba(62,224,255,0.75)); the existing C27 green lock ring is Code/Design's call"
+  },
+  "preview": "art/kit/a9-preview/a9-gold10-locked.png, a9-block045-locked.png, a9-pink10-locked.png (mock: canvas 'saturation' composite for the desat + this decal at the sizes above)"
+}

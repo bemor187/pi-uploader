@@ -18,8 +18,9 @@ fi
 for u in uploader-brain uploader-lane@tiktok uploader-lane@insta uploader-lane@clapper overseer overseer-epaper; do
   if systemctl is-enabled "$u" >/dev/null 2>&1; then systemctl restart "$u" && echo "restarted $u"; fi
 done
-# web: refresh the nginx site config (your files in /srv/web are untouched)
+# web: redeploy the hub + refresh the nginx site config (games/, files/ and a custom index.html are untouched)
 if [[ -L /etc/nginx/sites-enabled/web ]]; then
+  RUN_USER="$U" /opt/uploader/scripts/web-hub.sh   # hub site, token includes, hive feed
   cp /opt/uploader/web/nginx-web.conf /etc/nginx/sites-available/web
   nginx -t && systemctl reload nginx && echo "reloaded nginx (web)"
 fi

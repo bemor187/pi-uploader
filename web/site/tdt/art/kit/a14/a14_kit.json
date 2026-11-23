@@ -1,0 +1,249 @@
+{
+ "px_per_wu_2x": 4,
+ "sprites": {
+  "car_a14_hero": {
+   "draw_wu": [
+    45,
+    22
+   ],
+   "1x_px": [
+    90,
+    44
+   ],
+   "2x_px": [
+    180,
+    88
+   ],
+   "facing": "+x",
+   "body": "#D81B8C",
+   "roof": "#4A0730"
+  },
+  "car_a14_teal": {
+   "draw_wu": [
+    45,
+    21
+   ],
+   "1x_px": [
+    90,
+    42
+   ],
+   "2x_px": [
+    180,
+    84
+   ],
+   "facing": "+x",
+   "body": "#3F8F8A",
+   "roof": "#22504D"
+  },
+  "car_a14_tan": {
+   "draw_wu": [
+    45,
+    21
+   ],
+   "1x_px": [
+    90,
+    42
+   ],
+   "2x_px": [
+    180,
+    84
+   ],
+   "facing": "+x",
+   "body": "#C2A070",
+   "roof": "#6E5A3E"
+  },
+  "car_a14_white": {
+   "draw_wu": [
+    45,
+    21
+   ],
+   "1x_px": [
+    90,
+    42
+   ],
+   "2x_px": [
+    180,
+    84
+   ],
+   "facing": "+x",
+   "body": "#D8D6CF",
+   "roof": "#8C8A84"
+  },
+  "car_a14_slate": {
+   "draw_wu": [
+    45,
+    21
+   ],
+   "1x_px": [
+    90,
+    42
+   ],
+   "2x_px": [
+    180,
+    84
+   ],
+   "facing": "+x",
+   "body": "#5A6FA8",
+   "roof": "#323E60"
+  },
+  "car_a14_van": {
+   "draw_wu": [
+    49,
+    23
+   ],
+   "1x_px": [
+    98,
+    46
+   ],
+   "2x_px": [
+    196,
+    92
+   ],
+   "facing": "+x",
+   "body": "#9AA0AB",
+   "roof": "#5E636C"
+  },
+  "car_a14_police": {
+   "draw_wu": [
+    48,
+    22
+   ],
+   "1x_px": [
+    96,
+    44
+   ],
+   "2x_px": [
+    192,
+    88
+   ],
+   "facing": "+x",
+   "body": "#E8E6E0",
+   "roof": "#16181E"
+  },
+  "roof_ac": {
+   "draw_wu": [
+    14,
+    11
+   ],
+   "2x_px": [
+    56,
+    44
+   ]
+  },
+  "roof_vent": {
+   "draw_wu": [
+    7,
+    7
+   ],
+   "2x_px": [
+    28,
+    28
+   ]
+  },
+  "roof_tank": {
+   "draw_wu": [
+    16,
+    16
+   ],
+   "2x_px": [
+    64,
+    64
+   ]
+  },
+  "roof_skylight": {
+   "draw_wu": [
+    18,
+    12
+   ],
+   "2x_px": [
+    72,
+    48
+   ]
+  },
+  "billboard_a14": {
+   "draw_wu": [
+    64,
+    22
+   ],
+   "2x_px": [
+    256,
+    88
+   ],
+   "color": "#F03CF0",
+   "hue": 300,
+   "blend": "source-over (glow baked)"
+  },
+  "smoke_a14": {
+   "frames": 4,
+   "frame_wu": 32,
+   "2x_frame_px": 128,
+   "tint": "#C4C8D2",
+   "draw": "size = 2*s.r*1.6 wu, alpha = s.life*0.55"
+  },
+  "tree_a14": {
+   "draw_wu": [
+    40,
+    40
+   ],
+   "2x_px": [
+    160,
+    160
+   ],
+   "note": "green #2C6B4F family, hue ~150\u00b0, far from alley #7DFFA8 in value/sat"
+  }
+ },
+ "buildings": {
+  "teal": {
+   "roof": "#2F6F73",
+   "roof_lit": "#3B8486",
+   "parapet": "#1E4B4E",
+   "wall_s": "#173A3D",
+   "wall_e": "#1F4A4D"
+  },
+  "tan": {
+   "roof": "#9C7E58",
+   "roof_lit": "#B4936A",
+   "parapet": "#6E5940",
+   "wall_s": "#4A3C2B",
+   "wall_e": "#5C4B36"
+  },
+  "charcoal": {
+   "roof": "#3A3D45",
+   "roof_lit": "#484C56",
+   "parapet": "#25272D",
+   "wall_s": "#191B20",
+   "wall_e": "#22242A"
+  },
+  "type_map": {
+   "shop": "teal",
+   "corner_pad": "teal",
+   "warehouse": "tan",
+   "mid_rise": "charcoal",
+   "tower": "charcoal"
+  },
+  "wall_h_wu": {
+   "low": 14,
+   "medium": 22,
+   "tall": 34
+  },
+  "lean": [
+   -0.35,
+   -0.65
+  ],
+  "note": "Roof shifted by wall_h*lean (up-left) from the collision footprint; S + E wall faces fill the gap. Footprint/collision unchanged."
+ },
+ "ground": {
+  "sidewalk": "#4A4036",
+  "sidewalk_joint": "#3C342C",
+  "paver_wu": 32,
+  "curb": "#8C8272",
+  "curb_wu": 4,
+  "lot": "#1A1C22",
+  "crosswalk": "rgba(214,208,194,0.62)",
+  "crosswalk_stripe_wu": [
+   12,
+   12
+  ],
+  "crosswalk_depth_wu": 44
+ }
+}
