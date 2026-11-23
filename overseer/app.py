@@ -1,6 +1,7 @@
 """overseer: always-on AI tasker + cluster monitor.
 
 POST /task      {"prompt": "...", "system"?: "...", "agent"?: "msi", "model"?: "..."}
+                Agents are Ollama or OpenAI-compatible servers (AGENTS=name=ollama:URL|model or name=openai:URL|model).
                 Routed through AGENTS in order (MSI -> MacBook -> local); first that answers wins.
 GET  /tasks     recent tasks
 GET  /digest    plain-English cluster summary written by the local model
@@ -77,16 +78,20 @@ BACKUP_MAX_AGE = float(os.environ.get("BACKUP_MAX_AGE_H", "36")) * 3600
 
 
 def parse_agents(spec: str) -> list:
-    """name=ollama:URL[|model],...  (order = routing priority)"""
+    """name=kind:URL[|model],...  (order = routing priority)
+    kind is ollama (Ollama API) or openai (OpenAI-compatible: llama.cpp, LM Studio, vLLM...)."""
     agents = []
     for item in filter(None, (s.strip() for s in spec.split(","))):
         name, _, rest = item.partition("=")
         kind, _, target = rest.partition(":")
         url, _, model = target.partition("|")
-        if not name or kind != "ollama" or not url:
+        if not name or kind not in ("ollama", "openai") or not url:
             log.warning("ignoring bad AGENTS entry %r", item)
             continue
-        agents.append({"name": name.strip(), "url": url.strip().rstrip("/"),
+        url = url.strip().rstrip("/")
+        if kind == "openai":
+            url = url.removesuffix("/v1")   # accept http://host:port or http://host:port/v1
+        agents.append({"name": name.strip(), "kind": kind, "url": url,
                        "model": model.strip() or None})
     return agents
 
@@ -262,8 +267,12 @@ async def check_backups():
 async def monitor_once():
     async with httpx.AsyncClient(timeout=httpx.Timeout(10, connect=5)) as c:
         async def agent(a):
-            ok, detail, js = await probe(c, f"{a['url']}/api/tags")
-            models = [m.get("name") for m in (js or {}).get("models", [])] if ok else None
+            if a["kind"] == "openai":
+                ok, detail, js = await probe(c, f"{a['url']}/v1/models")
+                models = [m.get("id") for m in (js or {}).get("data", [])] if ok else None
+            else:
+                ok, detail, js = await probe(c, f"{a['url']}/api/tags")
+                models = [m.get("name") for m in (js or {}).get("models", [])] if ok else None
             if ok and a["model"] and models is not None and a["model"] not in models:
                 detail = f"ok, but model {a['model']} not pulled"
             await record(f"agent:{a['name']}", ok, detail,
@@ -321,6 +330,11 @@ async def ask(a: dict, model: str, prompt: str, system: str = "", timeout: float
     msgs = ([{"role": "system", "content": system}] if system else []) + \
            [{"role": "user", "content": prompt}]
     async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=5)) as c:
+        if a["kind"] == "openai":
+            r = await c.post(f"{a['url']}/v1/chat/completions",
+                             json={"model": model, "messages": msgs, "stream": False})
+            r.raise_for_status()
+            return r.json()["choices"][0]["message"]["content"]
         r = await c.post(f"{a['url']}/api/chat",
                          json={"model": model, "messages": msgs, "stream": False})
         r.raise_for_status()
