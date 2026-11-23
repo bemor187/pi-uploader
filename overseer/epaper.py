@@ -21,6 +21,7 @@ EPAPER_ROTATE (0 or 180, if mounted upside down). Driver files live in ./vendor/
 import json
 import logging
 import os
+import signal
 import sys
 import time
 import urllib.request
@@ -181,13 +182,23 @@ class Display:
         if ROTATE:
             img = img.rotate(ROTATE)
         e = self.epd
-        e.init()
-        buf = e.getbuffer(img)
-        if self.color:
-            e.display(buf, e.getbuffer(Image.new("1", img.size, 255)))
-        else:
-            e.display(buf)
-        e.sleep()  # low power + protects the panel between refreshes
+
+        def stuck(*_):  # the driver waits on BUSY forever; exit so systemd restarts us
+            log.error("display update stuck for 60s (BUSY never released); exiting")
+            os._exit(1)
+
+        signal.signal(signal.SIGALRM, stuck)
+        signal.alarm(60)
+        try:
+            e.init()
+            buf = e.getbuffer(img)
+            if self.color:
+                e.display(buf, e.getbuffer(Image.new("1", img.size, 255)))
+            else:
+                e.display(buf)
+            e.sleep()  # low power + protects the panel between refreshes
+        finally:
+            signal.alarm(0)
 
 
 def main():
