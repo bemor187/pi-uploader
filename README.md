@@ -128,14 +128,14 @@ This installs Ollama, which listens on `127.0.0.1:11434` only and keeps one mode
 It pulls `qwen2.5:1.5b`, starts `overseer` on :8200 and prints a **TASK_TOKEN**. Then edit `/etc/uploader.env`:
 
 ```
-AGENTS=msi=ollama:http://msi:11434|qwen3:14b,macbook=ollama:http://macbook:11434,local=ollama:http://127.0.0.1:11434|qwen2.5:1.5b
+AGENTS=garlic=openai:http://192.168.1.200:8080|Qwen3.5-9B,msi=ollama:http://msi:11434|qwen2.5-coder:7b,local=ollama:http://127.0.0.1:11434|qwen2.5:1.5b
 ALERT_URL=https://ntfy.sh/<your-long-random-topic>
 BRAIN_URL=http://brain
 ```
 
-and run `sudo systemctl restart overseer`. MSI and MacBook need `OLLAMA_HOST=0.0.0.0` and must be on the tailnet.
+and run `sudo systemctl restart overseer`. `garlic` is GarlicLLM on the PS4 (OpenAI-compatible, LAN). The MSI needs `OLLAMA_HOST=0.0.0.0` and must be on the tailnet; pick a model that fits its 16 GB RAM / 2 GB GPU (gemma4:26b does not).
 
-- `POST http://overseer:8200/task` with `Authorization: Bearer $TASK_TOKEN` and `{"prompt": "..."}`. Tasks go to MSI first, then the MacBook, then the local model.
+- `POST http://overseer:8200/task` with `Authorization: Bearer $TASK_TOKEN` and `{"prompt": "..."}`. Tasks go to garlic first, then the MSI, then the local model.
   Add `"agent": "msi"` (and optionally `"model"`) to pin a task to one agent.
 - `http://overseer:8200/` shows the status page. `/health` returns JSON. `/digest?token=$TASK_TOKEN` gives a plain-English summary from the first healthy agent (`DIGEST_AGENT=<name>` pins one).
 - Every 60s it checks each Ollama agent, brain, the three lanes, and the hosts in `SITES` (web by default). It sends an ntfy alert when one goes down (2 failed checks in a row) or comes back up, and for each newly failed upload.
